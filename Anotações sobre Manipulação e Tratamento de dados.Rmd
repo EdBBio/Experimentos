@@ -1,0 +1,1823 @@
+---
+title: "Práticas sobre Manipulação e Tratamento de dados"
+author: "Edson Nilton de Moura SIlva Júnior"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: yes
+    toc_depth: 3
+    number_sections: yes
+    fig_caption: yes
+    theme: united
+    toc_float:
+      collapsed: yes
+      smooth_scroll: yes
+---
+
+```{r setup, include=FALSE,warning=FALSE,message=FALSE}
+knitr::opts_chunk$set(echo = TRUE,message = FALSE,warning = FALSE)
+```
+
+![créditos: [@rstatsmemes](https://twitter.com/rstatsmemes?t=HkjH4XkVeowpGpFx4mOH3g&s=09), no twitter](G:/Meu Drive/R/Experimentos/meme.jpeg)
+
+# **A importância de um preparo de dados e o Tidy Data**
+
+## O `tidyverse`
+
+Existem alguns pacotes muito úteis quando está trabalhando com manutenção, tratamento e manipulação de dados de forma mais avançada. É possível fazer algumas operações básicas, através de pacotes nativos, como o `base` e o `stats`. Contudo, nos últimos anos, a ideia do `Tidy Data`, desenvolvida por Hadley Wickham, se tornou parte essencial na vida de quem trabalha com ciência de dados ([Wickham, 2014](https://www.jstatsoft.org/article/view/v059i10)).
+
+![](G:/Meu Drive/R/Experimentos/Tidy data.jpeg)
+
+Com esse cenário de cada vez mais e mais dados para serem trabalhados nos datasets (um conjunto de dados), o pacote `tidyverse` se tornou ferramenta indispensável na vida do programador em R. O `tidyverse` é um pacote que reúne uma série de subpacotes, voltados ao tratamento e manipulação de dados, em diversos formatos e de diversas formas, facilitando o trabalho de transformar um dataset inicial num resultado final desejado. Ao longo dessa apostila, o tidyverse será o principal pacote utilizado, assim como outros pacotes e funções básicas.
+
+Dentro do conceito do Tidy Data, dentro de um dataset, há uma padronização da organização das colunas e das linhas:
+
+* As colunas são as variáveis do dataset. Cada coluna é apenas um único tipo de variável;
+
+* As linhas são as observações do dataset. Cada linha é apenas uma única observação.
+
+Deste forma, cada célula do dataset conterá apenas um único valor, uma única informação. Neste formato, caso tivessemos um dataset com os dados de abundância diferentes espécies de anuros em 3 diferentes localidades, ao invés de ser uma variável para as espécies de anuros e mais 5 para cada localidade contendo os dados de abundância, no Tidy Data seria apenas uma variável para as espécies de anuros, uma variável com os dados de abundância para as espécies e mais uma variável para a localidade de cada observação: de 6 foram apara apenas 3 variáveis, permitindo uma melhor organização dos dados no dataset.
+
+## Elementos importantes nos próximos usos da apostila
+
+### `%>%` ou |> `(pipe)`
+
+Os pipe's são sistema de organização de códigos em aninhamento. Ou seja, utilizamos quando queremos fazer operações em seguida. Naturalmente, é possível fazer isso no R aninhando funções dentro de funções, como:
+
+* função1(função2(função3(função4)))
+
+Tratando da gramática do R, os pipe's seriam eqquivalentes ao `e então...` ou `e em seguida faça...`. Se fóssemos fazer um bolo, utilizando o princípio do pipe, seria algo como: 
+
+* pegue os materiais `%>%`
+  jogue farinha `%>%`
+  jogue ovos `%>%`
+  jogue margarina `%>%`
+  jogue chocolate em pó `%>%`
+  misture `%>%`
+  jogue em uma forma `%>%`
+  leve ao forno `%>%` 
+  ponha a cobertura
+  
+Para ajudar na leitura e compreensão, uma boa prática utilizada pelos programdores no geral é pôr comandos abaixo de comandos, linhas abaixo de linhas, após cada pipe, utilizando a tecla `enter`. Isso não afeta em nada a execução do código em si, mas permite que fique mais claro e visual como os comandos dos códigos estão aninhados.
+
+Por fim, vale também falar que existem dois pipes no R, atualmente. 
+
+* O primeiro é o mais clássico, o `%>%`. Este é do pacote `magrittr`, um subpacote do `tidyverse`, o que significa que o pacote `tidyverse`, ou ao menos o `magrittr`, precisa estar ativado para funcionar. Ele pode ser ativado simplesmente pelo comando `Ctrl+Shift+M`.
+
+* O nais novo, o `|>`. Este é o pipe nativo do R a partir das versões v.4.1, o que significa que não é necessário ter nenhum pacote instalado para utiliza-lo.
+
+### `$` e `[ ] `(elementos de dentro do dataset)
+
+O `$ ` representa quando queremos selecionar apenas uma única variável do dataset, sendo então `dataset$variável`. O `[ ]` é uma forma de dizer que será trabalhado com elementos internos do dataset. Numa analogia, seria como pegar as canetas de um estojo, através de `estojo[caneta vermelha]`.
+
+O `[ ]` também é uma forma mais avança de seleção. Este seleciona linhas e colunas, mas por numeração da linha e da coluna no dataset, sendo então `dataset[nº da linha, nº da coluna]`. É possível selecionar apenas linhas, com `dataset[nº da linha,]`, ou apenas colunas, com `dataset[,nº da coluna]` ou `dataset[nº da coluna]`, sendo no último caso, se a virgula não for utilizada, o R entenderá que é o nº da coluna. 
+
+Também é possível selecionar um conjunto de linhas e de colunas específicas, com ou sem intervalo. 
+
+* Sem intervalo: `dataset[c(nº da linha 1,nº da linha 2,...),c(nº da coluna 1,nº da coluna 2,...)]`;
+
+* Com intervalo: `dataset[c(nº da linha inicial:nº da linha final),c(nº da coluna inicial:nº da coluna final)]`.
+
+# **Selecionando observações (linhas)**
+
+## Pacotes exigidos
+ 
+```{r}
+library(tidyverse)
+```
+
+## Carregando os datasets utilizados
+
+```{r}
+data(starwars) # Dataset sobre personagens da franquia Starwars
+
+head(starwars) # Visualizando os dados
+
+data(iris) # Dataset sobre comprimento e largura de sépalas e de pétalas de 3 espécies de plantas
+
+head(iris) # Visualizando os dados
+
+data(mtcars) # Dataset contendo dados sobre design automobilístico da revista Motor Trend US, em 1974
+
+head(mtcars) # Visualizando os dados
+```
+
+## Selecionando linhas baseado em variáveis do dataset
+
+A função `filter()` é uma função do pacote `dplyr`, que seleciona as linhas de um dataset baseado em algum critério, especialmente em relação à alguma variável.
+
+### Fazendo um tipo de seleção
+
+selecionando apenas os linhas onde o valor da massa dos personagens é maior que 70 Kg.
+
+```{r}
+starwars %>% 
+  filter(mass>70) 
+```
+
+### Fazendo mais de uma seleção de uma vez para a mesma variável
+
+Usando o comando `|` dentro da função `filter()`, é possível fazer duas seleções para a mesma variável.
+
+```{r}
+starwars %>% 
+  filter(skin_color=="light" | skin_color=="fair")
+```
+
+Outra forma de fazer a mesma coisa, é utilizando o comando `%in%`. Esse comando indica elementos dentro de um vetor ou de um daraset. Assim, é outra forma para fazer mais de uma seleção para uma variável.
+
+```{r}
+starwars %>% 
+  filter(skin_color %in% c("light","fair"))
+```
+
+### Fazendo mais de uma seleção de uma vez para variáveis diferentes
+
+Há como fazer seleções para mais de uma variável. Nesse caso, foi selecionado apenas as linhas onde a massa dos personagens é maior que 70 Kg e a cor da pele é verde. Contudo, um cuidado deve ser tomado: o comando `&` filtra apenas as linhas que satisfaçam a condição, nesse caso, linhas que contenham personagens com mais de 70 Kg `e` cor de pele verde; já o comando `|` filtra todas as linhas que satisfaçam a condição, nesse caso, linhas que contenham personagens com mais de 70 Kg `e/ou` cor de pele verde, nesse caso, podendo ser um, ou outro, ou ambos. Se as linhas das variáveis foram excludentes, nada será selecionado. Nesse exemplo, se nas observações dos personagens da cor da pele verde não houve nenhuma observação da variável massa > 70Kg, nada seria selecionado.
+
+```{r}
+starwars %>% 
+  filter(mass>70 & skin_color=="green") 
+
+starwars %>% 
+  filter(mass>70 | skin_color=="green") 
+```
+
+### Fazendo seleção baseado em exclusão
+
+selecionando todas as linhas em que a cor de cabelo seja qualquer cor que não seja preto, através do `!` antecedendo o comando
+
+```{r}
+starwars %>% 
+  filter(!hair_color=="black") 
+```
+
+Selecionando todas as linhas em que a cor de cabelo seja qualquer cor que não seja preto, através do comando `!=`.
+
+```{r}
+starwars %>% 
+  filter(hair_color!="black")
+```
+
+### Selecionando as linhas que contém dados NA
+
+Se for desejado selecionar todas as linhas de um dataset baseado em uma variável que contém dados NA de uma variável, basta apenas usar a função `is.na()` para a variável, dentro da função `filter()`.
+
+```{r}
+starwars %>% 
+  filter(is.na(hair_color))
+```
+
+Naturalmente, também é possível fazer a exclusaão, como mostrado anteriormente.
+
+```{r}
+starwars %>% 
+  filter(!is.na(hair_color))
+```
+
+## Selecionando todas as linhas do dataset baseado em regra
+
+Há situações no tratamento de dados que determinados valores estão distribuídos em todas as variáveis, onde selecionar as observações que contém estes valores exige mais que filtrar apenas de uma variável, mais de todas as variáveis de um dataset. Existem uma série de comandos para fazer estas operações, dependendo do interesse.
+
+### Retirando os NA's
+
+É possível excluir todas as linhas com NA do dataset com a função `na.omit()`.
+
+```{r}
+na.omit(starwars)
+```
+
+Para garantir que as todas as linhas contendo NA's foram excluidas, será feito um teste se existe NA's.
+
+```{r}
+na.omit(starwars) %>% 
+  is.na() %>% 
+  isTRUE() # Verificando a existância de NA's
+
+# Verificando o nº de linhas antes e depois da exclusão das linhas contendo NA's
+
+nrow(starwars) # Nº de linhas originais das
+
+na.omit(starwars) %>% 
+  nrow()
+```
+
+Como foi possível observar, todas as linhas que continham NA's foram excluídas. De 87 linhas iniciais, foram para 29. Isso mostra que as linhas contendo NA's foram excluídas.
+
+### Selecionando todas linhas do dataset baseado em algum valor
+
+No caso de ser necessário filtrar todas as variáveis baseado em um valor que ocorrem em todas as variáveis, é necessário usar funções que correspondam a todas as variáveis. Para isso, é útil usar a função `filter_all()`, em conjunto com a função `any_vars()`. A função `filter_all()` é utilizada quando todas as variáveis precisam ser selecionadas, e a função `any_vars()` indica que será usada alguma condição para qualquer variável que a tenha. O `.` representa todas as variáveis do dataset. Sendo assim, `filter_all(any_vars(.==4))`, significa: `filtre todas as observações que o valor seja igual a 4, de qualquer variável `.
+
+```{r}
+mtcars %>% 
+  filter_all(any_vars(.==4)) 
+```
+
+Para garantir que o houveram linhas que não foram selecionadas, para garantir que a função funcionou, vamos comparar o nº de linhas do dataset `mtcars` antes e depois.
+
+```{r}
+nrow(mtcars) # Conferindo o nº de linhas do dataset mtcars antes da seleção
+
+mtcars %>% 
+  filter_all(any_vars(.==4)) %>% 
+  nrow() # Transformando a seleção em um objeto para medir seu nº de linhas
+```
+
+Como é possível observar, de apenas 32, foi para 21 linhas. 11 linhas não foram selecionadas.
+
+### Excluindo todas as linhas do datset baseado em algum valor
+
+Para fazer a exclusão, ao invés de usar `any_vars()`, usa-se `all_vars()`. Para testar se funcionou, será também calculado o nº de linhas do dataset filtrado.
+
+```{r}
+mtcars %>% 
+  filter_all(all_vars(.!=4)) # Excluindo todas as linhas que contém valores 4
+
+mtcars %>% 
+  filter_all(all_vars(.!=4)) %>% 
+  nrow() # Contabilizando o nº de linhas
+```
+
+Como foi possível observar, foram retiradas as linhas contem valores 4, reduzindo de 32 para 11 linhas. Contudo, é necessário também tomar um certo cuidado: esse comando exclui **TODAS** as linhas que contenham algum tipo de valor, para **TODAS** as colunas. Se **TODAS** linhas possuem determinado valor, para **QUALQUER** coluna, se for feita a exclusão, todas as linhas serão excluídas. Esse cuidado é necessário para evitar problemas ou surpresa no tratamento e na manipulação de dados. Por isso, se faz importante conhecer bem o dataset que está sendo trabalhado. Em alguns casos, ao lidar com Big Data (datasets muito grandes), pode acontecer que esse tipo de problema ocorra. Para mostrar isso na prática, será feito um exemplo com o dataset `iris`.
+
+```{r}
+iris %>% 
+  filter(!if_any(.cols=everything(),~.<5))
+```
+
+Nesse caso, não foram selecionadas nenhuma linha do dataset original, pois todas as linhas possuíam valores menores que 5.
+
+# **Selecionando variáveis (colunas)**
+
+Como mencionado anteriormente, usando o comando `$`, é possível selecionar as variáveis de um dataset. O pacote `dplyr` possui uma função para fazer isso, que é a função `select()`.
+
+## Pacotes exigidos
+
+```{r}
+library(tidyverse)
+```
+
+## Carregando os datasets utilizados
+
+```{r}
+data(starwars) # Dataset sobre personagens da franquia Starwars
+
+head(starwars) # Visualizando os dados
+
+data(iris) # Dataset sobre comprimento e largura de sempalas e de pétalas de 3 espécies de plantas
+
+head(iris) # Visualizando os dados
+```
+
+## Selecionando apenas uma coluna
+
+Selecionando apenas a coluna com os dados da cor do cabelo dos personagens.
+
+```{r}
+starwars %>% 
+  select(hair_color) 
+```
+
+## Selecionando mais de uma coluna
+
+Selecionando as colunas com os dados da cor do cabelo e dos olhos dos personagens.
+
+```{r}
+starwars %>% 
+  select(c(hair_color,eye_color)) 
+```
+
+## Selecionado colunas baseado por exclusão
+
+Selecionando todas as colunas com dados que não sejam sobre cor do cabelo e dos olhos dos personagens.
+
+```{r}
+starwars %>% 
+  select(!c(hair_color,eye_color))  
+```
+
+## Selecionado colunas baseado pelo começo do nome das colunas
+
+Selecionando todas as colunas em que os nomes começam com "Sepal".
+
+```{r}
+iris %>% 
+  select(starts_with("Sepal")) 
+```
+
+## Selecionado colunas baseado pelo fim do nome das colunas
+
+Selecionando todas as colunas em que os nomes terminam com "Width".
+
+```{r}
+iris %>% 
+  select(ends_with("Width")) 
+```
+
+## Selecionando colunas baseado em condição
+
+Diferentes variáveis em um dataset podem ter diferentes naturezas. Muitas vezes, o que se deseja é selecionar aquelas colunas que atendam a uma determinada condição. Para isso, usa-se a função `select_if()`. Nesse exemplo, para o dataset `iris`, serão selecionadas todas as variáveis que possuem valores numéricos.
+
+```{r}
+iris %>% 
+  select_if(is.numeric)
+```
+
+Como apenas a variável `Species` não possuia valores numéricos, apenas ela não foi selecionada. 
+
+# **Sumarizando**
+
+Em algumas situações, é necessário extrair valores ou propriedades de um dataset, ou pelo menos de algumas de suas variáveis, como o nº vezes que certo elemento ocorre em uma variável ou o desvio padrão dos valores de uma variável, baseando-se numa divisão em outra variável, sumarizando. Tradicionalmente, há como fazer no R comm pacotes nativos ou operações básicas, mas isso exigia tempo e podia ser desnecessariamente complexo em algumas situações mais  diversas. O pacote `dplyr` possui uma função para fazer isso, que é a função `summarise()`. Ela cria a sumarização dos dados.
+
+## pacotes exigidos
+
+```{r}
+library(tidyverse)
+```
+
+## Carregando os datasets utilizados
+
+```{r}
+data(starwars) # Dataset sobre personagens da franquia Starwars
+
+head(starwars) # Visualizando os dados
+
+data(iris) # Dataset sobre comprimento e largura de sempalas e de pétalas de 3 espécies de plantas
+
+head(iris) # Visualizando os dados
+```
+
+## Contagens de linhas
+
+Calculando o nº de linhas do dataset.
+
+```{r}
+starwars %>% 
+  summarise(ocorrência=n()) 
+```
+
+## contagens de ocorrências de uma variável
+
+É possível também fazer essas operações para cada tipo de ocorrência das variáveis, como por exemplo ver quantas vezes cada lugar de uma variável localidad aparece em um dataset. É possível fazer isso antes utilizando a função `group_by()` na variável desejada. Aqui, será calculado o nº de vezes que cada cor de cabelo dos personagens da franquia Starwars aparecem na variável `hair_color`. 
+
+```{r}
+starwars %>% 
+  group_by(hair_color) %>% 
+  summarise(ocorrência=n()) 
+```
+
+Outra forma de visualizar estes resultados é na forma de uma tabela. A função `kable()`, do pacote `knitr`.
+
+```{r}
+starwars %>% 
+  group_by(hair_color) %>% 
+  summarise(ocorrência=n()) 
+```
+
+Para facilitar, os próximos resultados estarão com a função `kable()`.
+
+## Contagem das ocorrências de mais uma variável
+
+Calculando o nº de elementos da variável da cor de cabelo dos personagens em relação à cor de olho.
+
+```{r}
+starwars %>% 
+  group_by(hair_color, eye_color) %>% 
+  summarise(ocorrência=n()) 
+```
+
+## Outras operações com os elementos das variáveis
+
+### Valor mínimo
+
+Calculando ao valor mínimo dos dados do comprimento das sépalas.
+
+```{r}
+iris %>% 
+  summarise(`Valor Mínimo`=min(Sepal.Length)) 
+```
+
+### Valor máximo
+
+Calculando o valor máximo dos dados do comprimento das sépalas.
+
+```{r}
+iris %>% 
+  summarise(`Valor Máximo`=max(Sepal.Length)) 
+```
+
+### Valor médio
+
+Calculando o valor mediano dos dados do comprimento das sépalas.
+
+```{r}
+iris %>% 
+  summarise(`Valor Médio`=median(Sepal.Length)) 
+```
+
+### Soma
+
+Calculando a soma dos dados do comprimento das sépalas.
+
+```{r}
+iris %>% 
+  summarise(Soma=sum(Sepal.Length))
+```
+
+### Média
+
+Calculando a média dos dados do comprimento das sépalas.
+
+```{r}
+iris %>% 
+  summarise(Média=mean(Sepal.Length)) 
+```
+
+### Desvio Padrão
+
+Calculando o desvio padrão dos dados do comprimento da sépala.
+
+```{r}
+iris %>% 
+  summarise(`Desvio Padrão`=sd(Sepal.Length)) 
+```
+
+### Mais de uma operação ao mesmo tempo
+
+```{r}
+iris %>% 
+  summarise(Soma=sum(Sepal.Length),Média=mean(Sepal.Length), `Desvio Padrão`=sd(Sepal.Length))
+```
+
+# **Criando novas variáveis**
+
+Um tipo de coisa que ocorre com uma certa frequência é usar elementos e propriedades do dataset para criar novas variáveis. Estas variáveis podem ser fruto do Tidying Data, como juntar várias variáveis em pouccas, como exemplo dado no incício dessa apostila, ou o inverso, transformar um conjunto de poucas variáveis em várias novas. Há também o caso das variáveis condicionais, onde os seus valores são condicionados à natureza dos dados de uma varável prévia do dataset, como criar uma nova variáveç sobre o governo federal baseado na variável ano. Existe uma série de funções para isso, que serão utilizadas nesse capítulo.
+
+## Pacotes exigidos
+
+```{r}
+library(tidyverse)
+```
+
+## Carregando os datasets utilizados
+
+```{r}
+data(starwars) # Dataset sobre personagens da franquia Starwars
+
+head(starwars) # Visualizando os dados
+
+data(iris) # Dataset sobre comprimento e largura de sempalas e de pétalas de 3 espécies de plantas
+
+head(iris) # Visualizando os dados
+```
+
+## Criando novas variáveis para um dataset
+
+Nova variável criada pela soma dos valores do comprimento e da largura das sépalas.
+
+```{r}
+iris$`Nova_Variável`<-iris$Sepal.Length+iris$Sepal.Width
+
+iris # conferindo a nova variável
+```
+
+## Condicionais
+
+### Condicionais binárias
+
+Usando a funçãoo `ifelse()` para criar uma nova variável baseada em uma condição binária: se a pétala possuir um comprimento maior que  4 na variável `Petal.Length`, constará na variável "É uma Pétala Comprida?" como "Sim"; se não, constará como "Não. É uma condição binária pois só há duas possibilidade de resposta.
+
+```{r}
+iris %>% 
+  mutate(`É uma Pétala Comprida?`=ifelse(Petal.Length>4,"Sim","Não"))
+```
+
+### Condicionais não-binárias
+
+Usando a função `mutate()` para criar uma variável condicional, baseada na massa, através da função `case_when()`. É uma condicional não-binária pois há mais do que duas possibilidades de resposta.
+
+```{r}
+iris %>% 
+  mutate(`Tipo de Largura`=case_when(Sepal.Width<3~"Baixa",
+                                     Sepal.Width>=3 & Sepal.Width<=3.5~"Moderada",
+                                     Sepal.Width>3.5~"Alta")
+         ) 
+```
+
+### Mais de um tipo de condiconal não binária
+
+Usando a função `mutate()` para criar uma variável condicional, baseada na massa, através da função `case_when()`. Nesse caso, criando duas novas variáveis condicionais.
+
+```{r}
+iris %>% 
+  mutate(`Tipo de Largura`=case_when(Sepal.Width<3~"Baixa",
+                                     Sepal.Width>=3 & Sepal.Width<=3.5~"Moderada",
+                                     Sepal.Width>3.5~"Alta"),
+         `Tipo de Comprimento`=case_when(Sepal.Length<5~"Baixa",
+                                     Sepal.Length>=5 & Sepal.Length<=6~"Moderada",
+                                     Sepal.Length>6~"Alta")
+         )
+```
+
+## Transformando conjunto de colunas em apenas duas (longging)
+
+Esse é o tipo de situação onde Mais de uma variável precisam se tornar duas: uma com os nomes das antigas variáveis e outra com os seus valores, como mencionado logo no incício desse RPubs. Para isso, usa-se a função `pivot_longer()`, do pacote `tidyr`. Com o `pivot_longer()`, é necessário indicar a variável para onde os nomes das variáveis irão (`names_to=`), a variável para onde os valores das variáveis irão (`values_to=`) e quais as colunas selecionadas (`cols=`). 
+
+### Baseado no começo do nome das colunas
+
+Aqui, será Trasformadas as colunas que os nomes começam em "Sepal" para criar uma coluna unificada com esses valores e uma nova coluna com os nomes das estruturas relacionadas. 
+
+```{r}
+iris_nova_sépala<-iris %>% 
+  pivot_longer(names_to = "Tipo de variável da sépala",
+               values_to = "valor",
+               cols=starts_with("Sepal")) 
+
+iris_nova_sépala # Conferindo os dados
+```
+
+### Baseado no fim do nome das colunas
+
+Aqui, será trasformado as colunas que os nomes terminam em "Length" para criar uma coluna unificada com esses valores e uma nova coluna com os nomes das estruturas relacionadas.
+
+```{r}
+iris_nova_comprimento<-iris %>% 
+  pivot_longer(names_to = "Estrutura",
+               values_to = "Comprimento",
+               cols=ends_with("Length")) 
+
+iris_nova_comprimento # Conferindo os dados
+```
+
+### Baseado em escolhas de colunas "aletórias"
+
+Selecionando as variáveis de alturea e massa para criar novas colunas, uma contendo o tipo de variável (Variável) e outra os valores (Valor).
+
+```{r}
+starwars_novas_vars<-starwars %>% 
+  pivot_longer(names_to = "Variável",
+               values_to = "Valor",
+               cols=c(height,mass)) 
+
+starwars_novas_vars[13:14] # Conferindo os dados
+```
+
+## Transformando duas colunas em um conjunto (Widering)
+
+Aqui é exatamente o oposto do `pivot_longer()`. Usando a função `pivot_wider()`, se informa a variável de onde os nomes das novas variáveis virão (`names_from=`) e a variável de onde os valores das novas variáveis virão (`values_from=`).
+
+### Retransforando colunas feitas no pivot_longer()
+
+Usando o dataset starwars_novas_vars feito previamente, as colunas Variável e Valor que foram criadas voltaram a ser as colunas height e mass, separadamente.
+
+```{r}
+starwars_refeita<-starwars_novas_vars %>% 
+  pivot_wider(names_from = Variável,
+              values_from = Valor)
+
+starwars_refeita[13:14] # conferindo os dados
+```
+
+### Transformando duas colunas em mais de duas
+
+Também é possível tranformar duas colunas em mais de duas, através de adicionar mais de uma coluna no `values_from=`.
+
+```{r}
+starwars_nova_wider<-starwars %>% 
+  pivot_wider(names_from = gender,
+              values_from = c(mass,height)) 
+
+starwars_nova_wider[12:17] # conferindo os dados
+```
+
+## Juntando colunas pelos seus valores
+
+Nessas situações, o que se deseja é que duas variáveis se tornem uma só, mas ao contrário do `pivot_longer()`, o nº de linhas do dataset se mantém, onde os valores de uma variável se mantém paralelos uns aos outros, ao invés de um abaixo na sequÊncia do outro. Para isso, usa-se a função `unite()`, do pacote `tidyr`, indicando qual será a nova variável fruto da unificação (`col=`), quais as variáveis que serão unidas (`c()`), e o que separará os valores (`sep=`).
+
+### Separando por espaço
+
+Unindo as colunas sex e gender em uma só, com seus valores separados apenas por espaços.
+
+```{r}
+starwars_nova_sexgend<-starwars %>% 
+  unite(col="Sex & Gender",
+        c(sex,gender),
+        sep=" ") 
+
+starwars_nova_sexgend[8] # conferindo os dados
+```
+
+### Separando por outros caracteres
+
+Unindo as colunas sex e gender em uma só, com seus valores separados apenas por espaços.
+
+```{r}
+starwars_nova_sexgend<-starwars %>% 
+  unite(col="Sex & Gender",
+        c(sex,gender),
+        sep=" & ") 
+
+starwars_nova_sexgend[8] # conferindo os dados
+```
+
+## Seprando uma coluna em outras colunas pelos seus valores
+
+Essa operação é exatamente o oposto do `unite()`. Utilizando a função `separate()`, do pacote `tidyr`, separa-se os valores de uma variável em duas, indicando qual variável será separada (`col=`), em quais variáveis será separada (`into=c()`), e o critério dos valores que serão separados (`sep=" "`). Utilizando o dataset starwars_nova_sexgend feito anteriromente, a coluna `sex & gender` foi redividida em duas colunas: `sex` e `gender`, onde o ponto de separação foi também o `" & "`.
+
+```{r}
+starwars_refeita_sexgend<-starwars_nova_sexgend %>% 
+  separate(col=`Sex & Gender`,
+           into=c("sex","gender"),
+           sep=" & ")  
+
+starwars_refeita_sexgend[8:9] # conferindo os dados
+```
+
+# **Alterando as informações dos dados de um dataset**
+
+Outra boa habilidade para quem trabalha com Ciência de Dados é alterar informações dentro de um dataset. Isso pode ocorrer pois o dataset não foi construído de forma adequada, foi corrompido ou porque houveram alterações no intuíto da pesquisa/projeto. Não faltam sitações onde são necessárias estas habilidades. É possível fazer isso com uma série de comandos, dependendo do intúito. 
+
+## Pacotes exigidos
+
+```{r}
+library(tidyverse)
+```
+
+## Carregando os datasets utilizados
+
+```{r}
+data(starwars) # Dataset sobre personagens da franquia Starwars
+
+head(starwars) # Visualizando os dados
+
+data(iris) # Dataset sobre comprimento e largura de sempalas e de pétalas de 3 espécies de plantas
+
+head(iris) # Visualizando os dados
+```
+
+## Método "padrão" 
+
+### Substituindo um valor por vez
+
+De forma manual, é possível substituir os valores de um tipo de dado por outra informação, uma por vez. Para isso, é selecionado com `dataset$variável[dataset$variável=="valor que será substituido"]<-"informação que substituirá"`. Aqui, os dados que estiverem como "black" serão substituídos por "preto".
+
+```{r}
+starwars$hair_color[starwars$hair_color=="black"]<-"preto" # substituindo a cor de cabelo "black" por "preto"
+
+starwars$hair_color # Conferindo os dados
+```
+
+### Método "padrão" para um dataset completo
+
+Assim como em um vetor, é possível fazer no dataset. Aqui, substituindo todos os valores 5 por "cinco".
+
+```{r}
+iris[iris>=5]<-"cinco" # substituido 5 por "cinco"
+
+iris # conferindo os dados
+```
+
+### Substituindo mais de um valor por vez
+
+Também é possível fazer essa substituição com mais de um tipo de valor, sendo esse conjunto substituido por um novo valor. Aqui, os valores entre 2 e 3 e entre 5 e 6 serão substituídos por "é o exemplo".
+
+```{r}
+data("iris") # recriando o dataset para o original
+
+iris[iris==2:3 | iris==5:6]<-"é o exemplo" # substituindo todos os valores entre 4 e 5 e 2 e 3 por "é o exemplo"
+
+iris # conferindo os dados
+```
+
+## Utilizando o `replace()`
+
+O `replace()` é uma função do pacote `base`, que substitui valores de um dataset. Ele faz exatamente o que os outras fazem, de uma forma mais simples.
+
+### Substituindo em todo o dataset
+
+```{r}
+starwars %>% 
+  replace(starwars=="light",values="claro")
+```
+
+# **Alterando a ordem dos valores das variáveis de um dataset**
+
+Há situações em que os valores das variáveis não estão na ordem desejada, seja ela crescente ou decrescentes, ou alfabética, seja de A-Z ou de z-A. Existem algumas formas de resolver isso, e o pacote `dplyr` possue algumas dessas ferramentas.
+
+## Pacotes exigidos
+
+```{r}
+library(tidyverse)
+```
+
+## Carregando os datasets utilizados
+
+```{r}
+data(starwars) # Dataset sobre personagens da franquia Starwars
+
+starwars # Visualizando os dados
+
+data(iris) # Dataset sobre comprimento e largura de sempalas e de pétalas de 3 espécies de plantas
+
+iris # Visualizando os dados
+```
+
+## Reordenar por ordem numérica
+
+### ordem crescente
+
+Utilizando a função `arrange()`, do pacote `dplyr`, é possível escolher a ordem numérica. O padrão da função é uma ordem crescente, então basta apenas a variável.
+
+```{r}
+iris %>% 
+  arrange(Sepal.Length)
+```
+
+### Ordem decrescente
+
+Como a ordem crescente é o padrão da função `arrange()`, usa-se o comando `desc()` para informar que a ordem é decrescente. Note que a espécie *Iris virginica*, que anntes estava nas últimas linhas, agora está nas primeiras.
+
+```{r}
+iris %>% 
+  arrange(desc(Sepal.Length))
+```
+
+## Ordem alfabética
+
+### A-Z
+
+Assim como em uma ordenação númerica, o padrão da ordenação alfabética é a ordenação A-Z. Uma coisa muito útil da função `arrange()` é que ela identifica a natureza dos valores, se estes são numéricos, de texto ou fatores, assim fazendo o tipo de reordenação correta na variável.
+
+```{r}
+starwars %>% 
+  arrange(name)
+```
+
+### Z-A
+
+Novamente, basta apenas utilizar o comando `desc()`.
+
+```{r}
+starwars %>% 
+  arrange(desc(name))
+```
+
+## Outras órdens desejadas
+
+Os métodos apresentados são úteis quando o reordenamento segue uma ordem, mas em outras ordens, que não seguem as regras apresentadas, estas funções não são muito úteis. Desta forma, para outros reordenamentos, é necessário usar outros comando, estes mais básicos. Nesse caso, vamos dividir o dataset original em outros, de acordo com os valores da variável desejada, com a função `filter()`, do pacote `dplyr`.
+
+Primeiro, serão visualizados quais os valores da variável `hair_color`, do dataset `starwars`, através da transformação em fator e em seguido verificando os níveis.
+
+```{r}
+starwars$hair_color %>% as.factor() %>% levels() 
+```
+
+Após saber quais os os valores, pode-se ser feitos datasets separados.
+
+```{r}
+auburn<-starwars %>% 
+  filter(hair_color=="auburn") 
+
+`auburn, grey`<-starwars %>% 
+  filter(hair_color=="auburn, grey")
+
+`auburn, white`<-starwars %>% 
+  filter(hair_color=="auburn, white")
+
+black<-starwars %>% 
+  filter(hair_color=="black")
+
+blond<-starwars %>% 
+  filter(hair_color=="blond")
+
+blonde<-starwars %>% 
+  filter(hair_color=="blonde")
+
+brown<-starwars %>% 
+  filter(hair_color=="brown")
+
+`brown, grey`<-starwars %>% 
+  filter(hair_color=="brown, grey")
+
+grey<-starwars %>% 
+  filter(hair_color=="grey")
+
+none<-starwars %>% 
+  filter(hair_color=="none")
+
+unknown<-starwars %>% 
+  filter(hair_color=="unknown")
+
+white<-starwars %>% 
+  filter(hair_color=="white")
+
+`NA`<-starwars %>% 
+  filter(is.na(hair_color))
+```
+
+Como nesta situaçao foram muitos valores, então muito objetos a serem criados, vale se lembrar que, ao invés de digitar o código todo, poupa tempo apenas cópiar e colar o comando, apenas alterando os parâmetros necessários, como o nome do objeto e da variável. Também vale ressaltar que as linhas contendo dados NA precisam tambem serem selecionadas, pois sem elas, havaeria perda de linhas de outras variável, e assim, perdendo informação. Por isso, lembre-se sempre de verificar a existância de dados NA, podendo utilizar a função `is.na()`. Com os objetos gerados, deve-se unir as linhas desses objetos, através da função `rbind()`. Essa função juntas as linhas indicadas dentro da função, na sequência dos indicada dos objetos na função
+
+```{r}
+starwars_reoganizado<-rbind(blond,blonde,auburn,`auburn, grey`,`auburn, white`,brown,`brown, grey`,black,grey,white,unknown,none,`NA`) # juntando as linhas
+
+starwars_reoganizado # conferindo os dados
+```
+
+Antes de finalizar a operação, vale o cuidado de conferir se o nº de linhas do dataset criado bate com o dataset original, para garantir que não houve perda de dados.
+
+```{r}
+nrow(starwars)==nrow(starwars_reoganizado)
+```
+
+Como foi possível observar, os números de linhas batem, então rejeita-se a hipótese que ocorreu perda de dados no processo. Uma coisa interessante desse método, é que ele também pode ser utilizado para reordenar a ordem das variável, substituindo apenas o `filter()` por `select()`, e o `rbind()` por `cbind()`.
+
+# **Controlando os fatores**
+
+Fatores são um tipo de dado categórico do R. Diferente dos dados de texto (`charater`), os fatores (`factor`) representam variáveis categóricas, numericamente. Diferente dos dados de texto, os fatores não ficam representados por aspas, e possuem níveis, que representam uma "hierarquia" dos fatores. Algumas operações do R exigem que os dados estejam como fator. O principal pacote para trabalhar com os fatores é o `forcats`, que também faz parte do `tidyverse`.
+
+## Pacotes exigidos
+
+```{r}
+library(tidyverse)
+```
+
+## Carregando os datasets utilizados
+
+```{r}
+data(starwars) # Dataset sobre personagens da franquia Starwars
+
+starwars # Visualizando os dados
+
+data(iris) # Dataset sobre comprimento e largura de sempalas e de pétalas de 3 espécies de plantas
+
+iris # Visualizando os dados
+```
+
+## Transformando em fator
+
+É possível transformar um dado de texto em fator. Para isso, primeiro é preciso saber se os dados estão em fator. Existem duas principais formas de fazer isso.
+
+```{r}
+# Método class() 
+
+starwars$name %>% 
+  class()
+
+# Método is.factor()
+
+starwars$name %>% 
+  is.factor()
+```
+
+Como mostrado, os dados não estão em fator. Pra transformar em fator, usa-se a função **as.factor()**.
+
+```{r}
+starwars$name %>% 
+  as.factor() %>% 
+  is.factor()
+```
+
+Como foi possível observar, os dados foram transformmados em fatores.
+
+## Alterando os fatores
+
+Também é possível redefinir os fatores utilizados, através da função `fact_recode()`. Para mostrar essas difernaças na prática, vamos utilizar o ggplot, da função `ggplot()`, do pacote `ggplot2`. Para saber mais sobre o ggplot, [clique aqui nesse outro RPubs](https://rpubs.com/Edbbio/974391).
+
+```{r}
+starwars %>% 
+  ggplot(aes(gender,height,fill=gender))+
+  geom_point(shape=21,color="black",size=4)+
+  labs(x="gênero",
+       y="altura",
+       fill="gênero")+
+  theme(text=element_text(family="TimesNewRoman"),
+            title=element_text(color="black",size=15),
+            axis.text = element_text(color="black",size=10),
+            axis.title = element_text(color="black",size=10),
+            panel.grid=element_line(color="grey75",linetype="dashed",size=0.7),
+            axis.line=element_blank(),
+            plot.background=element_rect(fill="white",color="white"),
+            panel.background=element_rect(fill="white"),
+            panel.border = element_rect(colour = "black",fill=NA,size=0.5),
+            legend.key= element_rect(color="white",fill="white"))
+```
+
+Agora os fatores serão alterados.
+
+```{r}
+# Alterando os fatores
+
+starwars$gender<-starwars$gender %>% 
+  as.factor() %>% 
+  fct_recode(masculino="masculine",
+             feminino="feminine")
+
+# Criando o ggplot
+
+starwars %>% 
+  ggplot(aes(gender,height,fill=gender))+
+  geom_point(shape=21,color="black",size=4)+
+  labs(x="gênero",
+       y="altura",
+       fill="gênero")+
+  theme(text=element_text(family="TimesNewRoman"),
+            title=element_text(color="black",size=15),
+            axis.text = element_text(color="black",size=10),
+            axis.title = element_text(color="black",size=10),
+            panel.grid=element_line(color="grey75",linetype="dashed",size=0.7),
+            axis.line=element_blank(),
+            plot.background=element_rect(fill="white",color="white"),
+            panel.background=element_rect(fill="white"),
+            panel.border = element_rect(colour = "black",fill=NA,size=0.5),
+            legend.key= element_rect(color="white",fill="white"))
+```
+
+## Alterando os níveis dos fatores
+
+Para mostrar como os fatores se distribuem natural e de forma alfabética, é útil utilizar um ggplot.
+
+```{r}
+iris %>% 
+  ggplot(aes(Species,Sepal.Length,fill=Species))+
+  geom_point(shape=21,color="black",size=4)+
+  labs(x="espécie",
+       y="Comprimento da sépala (cm)",
+       fill="espécie")+
+  theme(text=element_text(family="TimesNewRoman"),
+            title=element_text(color="black",size=15),
+            axis.text = element_text(color="black",size=10),
+            axis.title = element_text(color="black",size=10),
+            panel.grid=element_line(color="grey75",linetype="dashed",size=0.7),
+            axis.line=element_blank(),
+            plot.background=element_rect(fill="white",color="white"),
+            panel.background=element_rect(fill="white"),
+            panel.border = element_rect(colour = "black",fill=NA,size=0.5),
+            legend.key= element_rect(color="white",fill="white"))
+```
+
+### Ordem decrescente ou Z-A
+
+Existem algumas formas de reorganizar estas sequências de níveis. Uma forma é reorganizar em ordem decrescente ou Z-A, através da função `fct_rev()`.
+
+```{r}
+# Alterando a ordem alfebética para Z-A
+
+iris$Species<-iris$Species %>% 
+  fct_rev()
+
+# Criando o ggplot
+
+iris %>% 
+  ggplot(aes(Species,Sepal.Length,fill=Species))+
+  geom_point(shape=21,color="black",size=4)+
+  labs(x="espécie",
+       y="Comprimento da sépala (cm)",
+       fill="espécie")+
+  theme(text=element_text(family="TimesNewRoman"),
+            title=element_text(color="black",size=15),
+            axis.text = element_text(color="black",size=10),
+            axis.title = element_text(color="black",size=10),
+            panel.grid=element_line(color="grey75",linetype="dashed",size=0.7),
+            axis.line=element_blank(),
+            plot.background=element_rect(fill="white",color="white"),
+            panel.background=element_rect(fill="white"),
+            panel.border = element_rect(colour = "black",fill=NA,size=0.5),
+            legend.key= element_rect(color="white",fill="white"))
+```
+
+### Ordem específica
+
+Caso seja alguma ordem específica, é possível fazer utilizando a função `fct_relevel()`.
+
+```{r}
+# Reordenando os níveis
+
+iris$Species<-iris$Species %>% 
+  fct_relevel("virginica",
+              "setosa",
+              "versicolor")
+
+# Criando o ggplot
+
+iris %>% 
+  ggplot(aes(Species,Sepal.Length,fill=Species))+
+  geom_point(shape=21,color="black",size=4)+
+  labs(x="espécie",
+       y="Comprimento da sépala (cm)",
+       fill="espécie")+
+  theme(text=element_text(family="TimesNewRoman"),
+            title=element_text(color="black",size=15),
+            axis.text = element_text(color="black",size=10),
+            axis.title = element_text(color="black",size=10),
+            panel.grid=element_line(color="grey75",linetype="dashed",size=0.7),
+            axis.line=element_blank(),
+            plot.background=element_rect(fill="white",color="white"),
+            panel.background=element_rect(fill="white"),
+            panel.border = element_rect(colour = "black",fill=NA,size=0.5),
+            legend.key= element_rect(color="white",fill="white"))
+```
+
+# **Selecionando linhas por hierarquia dos valores**
+
+Há situações onde o que se deseja é saber as nº primeiras ou últimas ocorrências dos maiores ou menores dados de uma variável, os elementos de uma variável categórica que representam os nº maiores ou menores valores de um variável contínua ou até quantas vezes aparecem os os elementos de uma variável categórica que representam os nº maiores ou menores valores de um variável contínua. Dentro das data sciences, situações podem se tornar rotineiras, e parte da tomada de decisão, seja no mundo dos negócios ou em pesquisas científicas. Para fazer essas operações, bastam apenas funções bastante básicas, algumas já vistas aqui, apenas combinadas em sequência.
+
+## Pacotes exigidos
+
+```{r}
+library(tidyverse)
+library(palmerpenguins) # para extrair os dados de pinguins
+```
+
+## Carregando os datasets utilizados
+
+```{r}
+data(starwars) # Dataset sobre personagens da franquia Starwars
+
+starwars # Visualizando os dados
+
+data(penguins) # Medidas de tamanho para pinguins forrageiros adultos de pinguins perto da Estação Palmer, Antártica
+
+penguins # Visualizando os dados
+```
+
+## Selecionando as n observações com os maiores valores de uma variável
+
+Essa é o tipo de situação em que você precisa extrair os maiores valores de uma variável, normalmente combinando com uma variável categórica, para saber dessa variável categórica quai os elementos que aparecem. Um exemplo seria verificar dentro de um dataset sobre nº de espécies de anfíbios em diversos fragmentos de mata atlântica, quais os fragmentos correspondem às 5 maiores observações do nº de anfíbios.
+
+### Método `arrange()`
+
+Esse exemplo, serão selecionadas as ocorrências com as ilhas com as 30 maiores ocorrências do massa corporal das três espécies de pinguins, através das variável `island` e `body_mass_g`, do dataset `penguins`. Aqui, será utilizada a função `arrange`, para uma ordem numérica decrescente, atribuída a um novo objeto e então extraído as 30 primeiras linhas.
+
+```{r}
+pinguins_30_max<-penguins %>% 
+  arrange(desc(body_mass_g)) # Criando o novo dataset
+
+pinguins_30_max[1:30,] %>% 
+  select(body_mass_g) # Vizualizando as 30 primeiras observações
+```
+
+Para melhor vizualizar, será feito um gráfico com a função `ggplot()`, do pacote `ggplot2`.
+
+```{r}
+pinguins_30_max[1:30,] %>% 
+  ggplot(aes(island,body_mass_g))+ 
+  geom_boxplot(color="black",fill="#FFAA52")+
+  labs(x="ilhas",
+       y="massa corporal (g)")+
+  theme(text=element_text(family="TimesNewRoman"),
+            title=element_text(color="black",size=15),
+            axis.text = element_text(color="black",size=10),
+            axis.title = element_text(color="black",size=10),
+            panel.grid=element_line(color="grey75",linetype="dashed",size=0.7),
+            axis.line=element_blank(),
+            plot.background=element_rect(fill="white",color="white"),
+            panel.background=element_rect(fill="white"),
+            panel.border = element_rect(colour = "black",fill=NA,size=0.5),
+            legend.key= element_rect(color="white",fill="white"))
+```
+
+Como foi possível observar, apenas a ilha Biscoe foi presente nas 30 maiores ocorrências da variável de massa corporal dos pinguins. Agora, irá ser feito a mesma análise, mas com os anos como variável categórica no boxplot.
+
+### Método `slice_max()`
+
+O `slice_max()` é uma das funções `slice()`, que retira porções de observações de um dataset, do pacote `dplyr`. Ao contrário do `filter()`, que seleciona todas as possíveis observações baseadas na regra de filtragem, os as funções `slice()` selecionam apenas um número pre-estabelecido de observações, baseado não em regras de filtragem, mas em hierarquia, como as primeiras, as últimas ou as menores observações. A função `slice_max()` todas a n maiores maiores observações de uma variável, onde o n é estabelecido na função. Será feita a mesma coisa feita anteiormente com o dataset `penguins`, mas apenas usando a função `slice_max()`.
+
+```{r}
+penguins %>% 
+  slice_max(body_mass_g,n=30) %>% 
+  select(body_mass_g)
+```
+
+Usando a função `slice_max()`, é possível fazer exatamente a mesma coisa, porém de forma muito mais simples que no método anterior. Vale ressaltar que, se você selecionar `n=1`, para o `slice_max()`, e houverem mais de uma ocorrência com o mesmo valor, ele retornará todos as observações que possuírem aquele valor, sendo então maior que 1 observação.
+
+## Selecionando as n observações com menores valores de uma variável
+
+Esse é exatamente o oposto do tópico anterior. Aqui também será repetido o método com o `arrange()` e uma função `slice()`.
+
+### Método `arrange()`
+
+Nesse exemplo, serão selecionadas as ocorrências com as ilhas com as 30 menores ocorrências do massa corporal das três espécies de pinguins, através das variável `island` e `body_mass_g`, do dataset `penguins`. Aqui, será utilizada novamente a função `arrange`, mas agora para uma ordem numérica crescente, atribuída a um novo objeto e então extraído as 30 primeiras linhas, referentes às 30 menores observações do dataset original.
+
+```{r}
+pinguins_30_min<-penguins %>% 
+  arrange(body_mass_g) # Criando o novo dataset
+
+pinguins_30_min[1:30,] %>% 
+  select(body_mass_g) # Vizualizando as 30 primeiras observações
+```
+
+Como é possível observar, consegui-se extrair as 30 observações com os menores valores. Novamente, para melhor vizualizar, será feito um gráfico com a função `ggplot()`, do pacote `ggplot2`.
+
+```{r}
+pinguins_30_min[1:30,] %>% 
+  ggplot(aes(island,body_mass_g,fill=island))+ 
+  geom_boxplot(color="black")+
+  labs(x="ilhas",
+       y="massa corporal (g)",
+       fill="ilha")+
+  theme(text=element_text(family="TimesNewRoman"),
+            title=element_text(color="black",size=15),
+            axis.text = element_text(color="black",size=10),
+            axis.title = element_text(color="black",size=10),
+            panel.grid=element_line(color="grey75",linetype="dashed",size=0.7),
+            axis.line=element_blank(),
+            plot.background=element_rect(fill="white",color="white"),
+            panel.background=element_rect(fill="white"),
+            panel.border = element_rect(colour = "black",fill=NA,size=0.5),
+            legend.key= element_rect(color="white",fill="white"))
+```
+
+Quando selecionamos as 30 observações os menores valores de massa corporal, é possível obter dados das 3 ilhas.
+
+### Método `slice_min()`
+
+Esse também faz o oposto da sua "irmã" `slice_max()`: retira uma porção com as n menores observações de um dataset. Aqui também, o n é definido previamente na função. Será feito a mesma operação do tópico anterior, mas com a função `slice_min()`, também do pacote `dplyr`.
+
+```{r}
+penguins %>% 
+  slice_min(body_mass_g,n=30) %>% 
+  select(body_mass_g)
+```
+
+É uma forma mais simples de extrair as n observações com os menores valores, com menos linhas de código.
+
+## Selecionando as primeiras observações de um dataset
+
+Esse é o tipo de situação em que, em mãos de um dataset, você precisa selecionar as primeiras n observações. Um exemplo dessas situações é quando você pegou um dataset que contém os dados de candidatos a um workshop, e ganharia os 40 primeiros que se inscreverem, e o seu dataset tem 185 observaçãoes. Outro cenário é quando você tratou previamente um dataset de notas de candidatos a uma vaga de emprego que passaram por um treinee, reorganizou por órdem decrescente os valores das pontuações dos candidatos (como feito nos tópicos anteriores), e precisa selecionar os candidatos com as 10 maiores pontuações. E se você já praticou ou prestou atenção no capítulo 1 dessa apostila, já deve estar pensando que basta usar o comando `dataset tratado[1:10,]`. Sim, dá pra fazer assim, mas também há algumas funções que fazem isso.
+
+### Método `head()`
+
+A função `head()`, do pacote nativo `utils`, seleciona as primeiras n obbservações do dataset, onde o n também é especificado na função (daí o nome da função: "cabeça"). Nesse exemplo, serão selecionadas as 15 primeiras observações do dataset `starwars`.
+
+```{r}
+starwars %>% 
+  head(n=15)
+```
+
+### Método `slice_head()`
+
+Essa é mais uma pra lista das funções `slice()`, também do pacote `dplyr`. O funcionamento desta é extamente igual à função anterior. Aqui, também será útilizada o dataset `starwars` para selecionar suas 15 primeiras observaçãoes.
+
+```{r}
+starwars %>% 
+  slice_head(n=15)
+```
+
+## Selecionando as últimas observações de um dataset
+
+Equanto que para selecionar as n primeiras observações de uma variável é algo quase que "à gosto", já que há 3 formas de fazer, todas bem simples, o mesmo não acontece com selecionar as n últimas observações de uma variável. Isso acontece porque as 20 primeiras observações de um dataset não dependem do seu tamanho, do seu n de obserações: as 20 primeras observações serão as 20 primeiras, seja seu dataset tendo 50 ou 50000 observações. 
+
+Contudo, a situação muda se forem as n últimas linhas, caso você use o comando `dataset[n:n,]`: se você usar `dataset[31:50,]` para um dataset que tenha 50 observações, você terá as 20 últimas observações, mas de você tiver um dataset com 50000 observações, e você fizer o mesmo comando, você não terá as 20 últimas observações. Nessa situação, funções que fazem isso de forma automática são muito úteis e polpam linhas de código.
+
+### Método `tail()`
+
+A função `tail()` é uma função do pacote `utils`, e que seleciona as n últimas observações de um dataset. Aqui, será feito como nos exemplos anteriores, mas dessa vez, para as 20 últimas observações.
+
+```{r}
+starwars %>% 
+  tail(n=20)
+```
+
+### Método `slice_tail()`
+
+Outras das funções `slice()`, do pacote `dplyr`, a função `slice_tail()` também seleciona as n menores observações de um dataset. Para esse exemplo, será seguido o exemplo anterior.
+
+```{r}
+starwars %>% 
+  slice_tail(n=20)
+```
+
+## Selecionando uma amostra aleatória de um dataset
+
+Em situações em que é necessário extrair uma amostra aleatória de um dataset, para escolher locais para fazer coleta de dados, ou para análises estatísticas, é necessário algoritmos que sigam modelos aleatórios, sem viéses. No R, é possível fazer isso utilizando a função `slice_sample()`. Essa função será utillziada para a extrair uma amostra de 30 observações do dataset `starwars`.
+
+```{r}
+starwars %>% 
+  slice_sample(n=30)
+```
+
+É um algoritimo aleatório, pois se eu fizer a mesma operação novamente, retornarão valores diferentes.
+
+```{r}
+starwars %>% 
+  slice_sample(n=30)
+```
+
+## Elementos que mais aparecem dentro de uma seleção
+
+Deu para perceber que há várias formas de selecionar observações de um dataset por algum critério hierárquico, mas também há como combinar estes comando com outros, para fins como saber quais os elementos de uma variável categórica mais aparecem. Um exemplo disso seria pegar um dataset sobre a ocorrência de anfíbios em áreas de mata atlântica, onde cada linha representa um dia de pesquisa, seu dataset tendo 300 linhas, e você precisa saber quais foram as espécies que foram registradas nos primeiros 50 dias e quantas vezes cada espécie ocorreu, ou quantas vezes cada espécie ocorreu nas observações com os 30 maiores valores. Esse é só um dos exemplos que podem ocorrer onde é necessário combinar comandos.
+
+### Elementos que mais aparecem dentro das primeiras observações
+
+Para esse exemplo, será usado o dataset `starwars`, e catalogar quais cores dos olhos, da variável `eye_color`, mais aparecem nas 50 primeiras observações, e a conatagem de quantas vezes cada cor do olho ocorre, com as funções `group_by()` e `summarise()`, já faladas no capítulo 4.
+
+```{r}
+starwars %>% 
+  slice_head(n=50) %>% 
+  group_by(eye_color) %>% 
+  summarise(`quantas vezes apareceu?`=n()) 
+```
+
+Se for desejado extrair em ordem decrescente, onde as primeiras observações mostram os maiores valores, basta apenas usar a função `arrange()`, com o comando `desc()` para a variável `quantas vezes apareceu?`.
+
+```{r}
+starwars %>% 
+  slice_head(n=50) %>% 
+  group_by(eye_color) %>% 
+  summarise(`quantas vezes apareceu?`=n()) %>%
+  arrange(desc(`quantas vezes apareceu?`))
+```
+
+Foi possível observar que, nas primeiras 50 observações, a maior parte dos personagens tiveram cor de olho azul, seguido por marrom e laranja.
+
+### Elementos que mais aparecem dentro das últimas observações
+
+Será repetido o mesmo processo aqui, mas com as últimas linhas, a fim de ver se o fenômeno se repete.
+
+```{r}
+starwars %>% 
+  slice_tail(n=50) %>% 
+  group_by(eye_color) %>% 
+  summarise(`quantas vezes apareceu?`=n()) 
+```
+
+NOvamente, será usado o `arrange()` para organizar os dados de contagem.
+
+```{r}
+starwars %>% 
+  slice_tail(n=50) %>% 
+  group_by(eye_color) %>% 
+  summarise(`quantas vezes apareceu?`=n()) %>%
+  arrange(desc(`quantas vezes apareceu?`))
+```
+
+Nas 50 últimas observações, houveram mais personagens cor de olho marrom, ao contrário do anterior, seguido por preto e amarelo.
+
+### Elementos que mais aparecem dentro das observações com os maiores valores
+
+Seguindo a mesma lógica dos exemplos anteriores, apenas será usada a função `slice_max()` para catalogar as cores dos olhos dos personagens que aparecem nas 50 observações com os maiores valores para a massa do corpo e contar sua ocorrência. Dessa vez, a função `arrange()` já será operad em conjunto.
+
+```{r}
+starwars %>% 
+  slice_max(mass,n=50) %>% 
+  group_by(eye_color) %>% 
+  summarise(`quantas vezes apareceu?`=n()) %>% 
+  arrange(desc(`quantas vezes apareceu?`))
+```
+
+Para as 50 observações com os maiores valores da variável da massa, a cor do olho azul foi a que mais apareceu, seguida de marrom e amarelo.
+
+### Elementos que mais aparecem dentro das observações com os menores valores
+
+Seguindo a mesma lógica do exemplo feito anteriormente, apenas será usada a função `slice_min()`, e não `slice_max()`, para catalogar as cores dos olhos dos personagens que aparecem nas 50 observações com os menores valores para a massa do corpo e contar sua ocorrência. Dessa vez, a função `arrange()` também já será operad em conjunto.
+
+```{r}
+starwars %>% 
+  slice_min(mass,n=50) %>% 
+  group_by(eye_color) %>% 
+  summarise(`quantas vezes apareceu?`=n()) %>% 
+  arrange(desc(`quantas vezes apareceu?`))
+```
+
+Aqui os resultados se inverteram um pouco: nas 50 observações com os menores valores de massa, a cor de olho marrom foi a que mais apareceu, esta então seguida de azul e amarelo.
+
+# **Manipulando o nome das linhas e das colunas**
+
+A manipulação dos nomes das colunas e das linhas é outra parte importante e corriqueira dentro das ciências de dados, já que, frequentemente, não apenas os nomes de uma variável precisa ser modificado, mas também das linhas, seja adicionar, alterar o nome destas ou até remover. Com comandos simples, principalamente do pacote `base`, é possível fazer isso de forma rápida.
+
+## Pacotes exigidos
+ 
+```{r}
+library(tidyverse)
+```
+
+## Carregando os datasets utilizados
+
+```{r}
+data(starwars) # Dataset sobre personagens da franquia Starwars
+
+head(starwars) # Visualizando os dados
+
+data(iris) # Dataset sobre comprimento e largura de sépalas e de pétalas de 3 espécies de plantas
+
+head(iris) # Visualizando os dados
+```
+
+## Controlando as colunas
+
+### Alterando o nome das colunas
+
+Utilizando a função `colnames()`, do pacote `base`, para as variáveis selecionadas, é possível atribuir novos nomes às variáveis. Nesse exemplo, será usado o dataset `starwars`, onde o nome de algumas variáveis possuem um `_` no seu nome. Será removido estes nomes por outros sem `_`.
+
+```{r}
+colnames(starwars)[4]<-"hair.color"
+
+starwars[,4]
+```
+
+Especificando o nº de coluna, é possível atribuir um nome nome à variável. Agora serão alterados todos os nomes que contiverem `_`.
+
+```{r}
+colnames(starwars)[4:7]<-c("skin color", "eye color","birth year")
+
+starwars[4:7]
+```
+
+Como observado acima, todas as colunas que possuiam `_` tiveram seus nomes alterados.
+
+### Removendo o nome das colunas
+
+Além de alterar seus nomes, outra coisa possível é remover os nomes, seja de uma, de várias ou de todas as colunas de um dataset. Nesse caso, basta apenas atribuir um `NA` aos nomes das colunas, também utilizando a função `colnames()`.
+
+```{r}
+starwars[,14] # Antes de ter o nome da coluna excluído
+
+colnames(starwars)[14]<-NA
+
+starwars[,14] # Após ter o nome da coluna excluído
+```
+
+### Adicionando nome às colunas
+
+Aqui segue basicamente a mesma lógica do esquema anterior.
+
+```{r}
+colnames(starwars)[14]<-"Starships"
+
+starwars[,14]
+```
+
+## Controlando as linhas
+
+### Adicionando nome às linhas
+
+Nesse tipo de situação, o dataset não possui nomes para as linhas, mas precisaria ter, como o nome de cada comunidade que representasse as observações. Nesse exemplo, será utilizado o dataset `iris`, onde cada observação representa 1 comunidade. Para isso, será utilizada a função `row.names()`, do pacote `base`, em conjunto com a função `paste0()`, também do pacote `base`. A função `paste0()` cria um sequência de nomes, seguidos por números.
+
+```{r}
+row.names(iris)<-paste0("comunidade ",1:150)
+
+iris
+```
+
+### Alterando o nome das linhas
+
+A forma para alterar o nome das linhas é semelhante a com alterar o nome das colunas.
+
+```{r}
+row.names(iris)[1:3]<-c("1ª coluna","2ª coluna","3ª coluna")
+
+iris
+```
+
+### Removendo o nome das linhas
+
+Para remover o nome das linhas, ao invés de usar `NA`, usa-se `NULL`.
+
+```{r}
+row.names(iris)<-NULL
+
+iris
+```
+
+# **Tratando sequências de informações**
+
+Há situações onde o desejado é apenas criar uma sequência de informações, sejam estas seguindo uma ordem ou não. De certa forma, muita coisa apresentada aqui já foi a criação de sequências de informações. Agora, serão apresentados comandos básicos para a maioria das situações envolvendo a criação de sequências de informações.
+
+## Pacotes exigidos
+ 
+```{r}
+library(tidyverse)
+```
+
+## Carregando os datasets utilizados
+
+```{r}
+data(starwars) # Dataset sobre personagens da franquia Starwars
+
+head(starwars) # Visualizando os dados
+
+data(iris) # Dataset sobre comprimento e largura de sépalas e de pétalas de 3 espécies de plantas
+
+head(iris) # Visualizando os dados
+```
+
+## Sequências sem repetição
+
+Sequências sem repetições não seguem uma ordem ou algorítimo, então dependem unicamente de quem a projeta. O comando mais usado, e também o mais simples, é o comando `c()`, do pacote `base`.
+
+```{r}
+c(1,7,"a","%",89)
+```
+
+## Repetições de valores
+
+### Repetição de apenas um valor
+
+A função `rep()` cria uma repetição de valores, seguindo uma sequência e ordem pré-determinadas na própria função. Para o exemplo, a palavra *`Boana albomarginata`* será repetida 8 vezes.
+
+```{r}
+rep("Boana albomarginata", 8)
+```
+
+### Repetição de mais de um valor
+
+Semelhante à situação anterior, mas dessa vez com também a espécie *`Allobates olfersioides`*.
+
+```{r}
+rep(c("Boana albomarginata","Allobates olfersioides"),8)
+```
+
+Contudo, a repetição não separou uma sequência para ambas as espécies. Para informar que cada espécie deve aparecer primeiro 8 vezes e em seguida a outra, também oito vezes, usa-se o comando `each=`.
+
+```{r}
+rep(c("Boana albomarginata","Allobates olfersioides"),each=8)
+```
+
+### Repetição de mais de um valor e com nº de repetições para cada valor
+
+Nesse exemplo, as espécies *`Boana atlantica`*, *`Scinax x-signatus`* e *`Pristimantis paulodutrai`* serão colocados em repetição, mas dessa vez cada um se repetirá um n° específico de vezes. Para isso, basta apenas usar o comando `c()`.
+
+```{r}
+rep(c("Boana atlantica","Scinax x-signatus","Pristimantis paulodutrai"),c(7,2,20))
+```
+
+## Sequências de valores
+
+Ao contrário das repetições, as sequências seguem um contínuo, de um valor mínimo a um valor máximo, seguindo uma sequência de intervalos, pré-determinados na função. Nesse exemplo, será criada uma sequência numérica, de 30 a 50, de 2 em 2. Na função `seq()`, do pacote `base`, o primeiro número representa o valor mínimo, o segundo número rpresenta o valor máximo, e o terceiro número representa a sequência dos intervalos.
+
+```{r}
+seq(30,50,2)
+```
+
+## Sequências de palavras ordenadas
+
+Em situações em que o que se deseja criar uma sequência de palavras, estas seguidas por números, duas funções úteis e semelhanntes são as funções `paste()` e `paste0()`, ambas do pacote `backports`.
+
+### `paste()` 
+
+Na função `paste()`, primeiro informa-se o prefixo dos valores das sequências, e em seguida a sequência de números que funcioarão como sufixo. Para este exemplo, será crriada um sequência de valores, de `espécie1` até `espécie15`.
+
+```{r}
+paste("espécie",1:15)
+```
+
+Também é possível criar a sequência contrária, apenas alterndo a sequência.
+
+```{r}
+paste("espécie",15:1)
+```
+Além de números, é possível utilizar palavras como sufixo. Nesse exemplo, usando a função `rep()`, serão criadas a partir de repetições.
+
+```{r}
+paste("espécie",rep(c("de Mata Atlântica","amazônica","da Caatinga"),c(4,16,9)))
+```
+
+### `paste0()`
+
+A função `paste0()` é semelhante à função `paste()`, mas é possível controlar os espaços entre os prefixos e os sufixos.
+
+```{r}
+paste0("espécie",1:15)
+
+paste0("espécie ",1:15)
+```
+
+## Criando amostras aleatórias
+
+Criar amostras aleatórias são situações em que é necessário trabalhar com um conjunto de dados, mas que deseja-se fugir de algum viés. É extremamente útil em testes estatísticos de hípoteses e/ou para testar alguma condição de uma base de ados. no R, para criar amostras aleatórias, basta apenas usar a função `sample()`, do pacote `base`. Na função `sample()0`, é informado o intervalo dos valores, e o tamanho da amostra, com o comando `size=`.
+
+### Amostram sem repetição
+
+Nesse exemplo, será criada uma amostra com 10 valores, estes podendo variar de 1 a 20.
+
+```{r}
+sample(1:20,size=10)
+```
+### Amostras com repetição
+
+Há duas possíveis situações onde se deseja que uma amostra tenha repetições:
+
+* Quando é vantajoso que os valores sejam repetidos, devido à alguma exigência;
+
+* Quando o intervalo dos valores da amostra são menores que o tamanho da amostra.
+
+Nestes dois casos, basta apenas executar o comando `replace=TRUE`, para indicar que deve haver repetição dos valores. Nesse exemplo, será feito como no exemplo anterior, mas com uma amostra contendo 30 valores.
+
+```{r}
+sample(1:20,size=30,replace=TRUE)
+```
+### Amostras para valores categóricos
+
+As amostras não se restringem aos valores numéricos contínuos, mas também aos valores categóricos. Uma situação em que é útil fazer esse tipo de amostragem é para escolher, aleatoriamente, 10 de 30 candidatos para fazer uma pesquisa, a fim de prezar pela aleatoriedade. Nesse exemplo, será feita uma amostra com os dados da cor da pele dos personagens, para posteriormente analisar como se dá a distribuição dos dados de altura dos personagens com estas cor da pele.
+
+```{r}
+amostra_cordepele<-starwars$skin_color %>%
+  sample(size=10)
+
+amostra_cordepele
+```
+
+Com a amostrada criada, será selecionado isto do dataset original, e assim criado um histograma.
+
+```{r}
+starwars %>% 
+  filter(skin_color %in% amostra_cordepele) %>% 
+  ggplot(aes(mass))+
+  geom_histogram(color="black",fill="#FFAA52")+
+  labs(x="massa (kg)",
+       y="ocorrência")+
+  theme(text=element_text(family="TimesNewRoman"),
+            title=element_text(color="black",size=15),
+            axis.text = element_text(color="black",size=10),
+            axis.title = element_text(color="black",size=10),
+            panel.grid=element_line(color="grey75",linetype="dashed",size=0.7),
+            axis.line=element_blank(),
+            plot.background=element_rect(fill="white",color="white"),
+            panel.background=element_rect(fill="white"),
+            panel.border = element_rect(colour = "black",fill=NA,size=0.5),
+            legend.key= element_rect(color="white",fill="white"))
+```
+
+Como mostrado no gráfico, na amostra coletada, a maior parte das ocorrências tiveram uma massa na faixa de ~70-90 Kg, sendo 80 Kg o ápice das ocorrências. Se fosse feito novamente, tería-se outra distribuição, pois seria outra amostra, mesmo que um pouco semelhante.
+
+```{r}
+amostra_cordepele2<-starwars$skin_color %>%
+  sample(size=10)
+
+amostra_cordepele2
+
+starwars %>% 
+  filter(skin_color %in% amostra_cordepele2) %>% 
+  ggplot(aes(mass))+
+  geom_histogram(color="black",fill="#FFAA52")+
+  labs(x="massa (kg)",
+       y="ocorrência")+
+  theme(text=element_text(family="TimesNewRoman"),
+            title=element_text(color="black",size=15),
+            axis.text = element_text(color="black",size=10),
+            axis.title = element_text(color="black",size=10),
+            panel.grid=element_line(color="grey75",linetype="dashed",size=0.7),
+            axis.line=element_blank(),
+            plot.background=element_rect(fill="white",color="white"),
+            panel.background=element_rect(fill="white"),
+            panel.border = element_rect(colour = "black",fill=NA,size=0.5),
+            legend.key= element_rect(color="white",fill="white"))
+```
+
+## Sequência de laços de repetição
+
+Sequências de repetição não condicionais apenas repetem um conjunto de tarefas de uma vez, não importando nenhuma suposta condição. São operações muito utilizadas quando você possui uma quantidade de tarefas a serem repetidas, baseando-se nos elementos de um conjunto de dados. Exemplo clássico: você possui uma base de dados com mais de 30 variáveis, sendo estas 1 é uma variável categória com dados binários (1 e 0) para a presença (1) ou não-presença (0) de um animal em uma região (lembrando que "ausência", na ecologia, é algo dificil de ser mensurado, então "não presença" é um termo mais adequado), as outras 29 são variáveis numéricas contínuas sobre variáveis ambientais do local, e o seu trabalho é calcular a regressão logística simples da influência de cada uma das variáveis no comportamento da variável categórica. Existe o jeito padrão, que seria apenas repetir a operação, substituíndo apenas a variável no processo. Contudo, um jeito que poupa tempo são criando `laços de repetição`.
+
+Laço de repetição `for` está na base da lógica de programação, não apenas da linguagem R, mas também de outras linguagens de programação. O que o laço `for()` faz é pegar os elementos em um vetor, e em seguida executar uma sequência de operações postas no comando, gerando assim uma sequência de resultados. normalmente, para informmar que serão trabalhados com os elementos de um vetor, usa-se o argumento `i` para o vetor, sendo então `i in 1:10` significa que serão feitas operações com todos os numéros entre 1 a 10.
+
+Para exemplificar, nesse exemplo abaixo serão printados os numéros que aparecem numa sequência de números de 1 a 10. na função `for()`, importante notar que os comandos estarão entre as chaves `{ }`, enquanto que o vetor e a condição estarão entre os parênteses `( )`. outra coisa importante é que, caso deseje-se que os comandos pareçam como resultados, como `outputs`, é necessário usar a função `print()`.
+
+```{r}
+for(i in 1:10){
+  
+  print(i)
+  
+}
+```
+
+Para exemplificar melhor o que se pode ser feito, agora cada elemento do vetor será elevado ao quadrado e, em seguida, ao cubp.
+
+```{r}
+for(i in 1:10){
+  
+  print(i^2)
+  
+  print(i^3)
+}
+```
+
+Agora será feita uma coisa mais avançada: com o dataset `iris`, será feito um gráfico de boxplot sobre cada uma das variáveis contínuas, sobre o comprimento e largura das sépalas e pétalas para a variável categórica das espécies. Primeiramente, foram selecionadas apenas as variáveis númericas, utilizando a função `select_if()` com o comando `is.numeric` no dataser. Em seguida, dentro dos comandos, foi criado os comandos em [ggplot](https://rpubs.com/Edbbio/974391), onde na variável dependente, a variável Y, foi utilizado o comando `i`. para indicar que estariam sendo trabalhados as variáveis selecionadas. Por fim, foi adicionado um `print()`, para plotar os gráficos como `output`.
+
+```{r}
+for(i in iris %>% select_if(is.numeric)){
+  
+  print(iris %>% 
+          ggplot(aes(Species,i,fill=Species))+
+          geom_boxplot(color="black")+
+          labs(x="Espécies",
+               y=colnames(iris),
+               fill="Espécies")+
+          theme(text=element_text(family="TimesNewRoman"),
+            title=element_text(color="black",size=15),
+            axis.text = element_text(color="black",size=10),
+            axis.title = element_text(color="black",size=10),
+            panel.grid=element_line(color="grey75",linetype="dashed",size=0.7),
+            axis.line=element_blank(),
+            plot.background=element_rect(fill="white",color="white"),
+            panel.background=element_rect(fill="white"),
+            panel.border = element_rect(colour = "black",fill=NA,size=0.5),
+            legend.key= element_rect(color="white",fill="white")))
+  
+}
+```
+
+Sabendo onde posicionar o argumento `i` e o que fazer com ele, é possível fazer várias tarefas de uma vez. Outro exemplo, agora estatístico, é testar se há diferença nos comprimentos e larguras das sépalas e pétalas em relação à espécie. Para isso, será feito um teste ANOVA, utilizando o `for()` para fazer as repetições.
+
+```{r}
+for(i in iris %>% select_if(is.numeric)){
+  
+  print(aov(i~Species,data=iris) %>% 
+          summary())
+  
+}
+```
+
+Como observado acima, há uma influência da espécie para a largura e o comprimento das sépalas e das pétalas (p<0,01). Contudo, vale ressaltar também que a ordem com que os elementos aparecem correspondem com a órdem dos elementos no vetor. Por isso, é importante correcer a ordem dos elementos no vetor que estão sendo trabalhados.
+
+### Criação de objetos com laço `for`
+
+Na seção sobre `Alterando a ordem dos valores das variáveis de um dataset`, para alterar a órdem dos valores de uma órdem aleatória, foi criado objetos filtrando os valores da variável. Mas foram filtrados 1 por vez. Isso não é nenhum pouco prático, mas é possível criar os mesmos objetos de forma mais rápida utilizando o laço `for`. Para isso, será criado um vetor contendo os valores da variável, através da função `unique()` que exclui valores repitidos, um vetor contendo os objetos para onde as filtragens irão, através da função `paste0()`, e a filtragem, coma função `filter()` na função `assign()`, que cria novos objetos contendo valores especificados na fuunção, tudo no laço `for`.
+
+```{r}
+for(i in starwars$hair_color %>% unique()){
+  
+  objetos <- paste0(i, "_objeto")
+  
+  assign(objetos, 
+         starwars %>%
+           filter(hair_color %in% i))
+}
+```
+
+Com os objetos já criados, basta apenas reordena-los, através da função `rbind()`.
+
+```{r}
+starwars_reordenado <- rbind(blond_objeto,blonde_objeto,auburn_objeto,`auburn, grey_objeto`,`auburn, white_objeto`,brown_objeto,`brown, grey_objeto`,black_objeto,grey_objeto,white_objeto,unknown_objeto,none_objeto, NA_objeto)
+
+starwars_reordenado
+```
+
+Desta forma, o trabalho fica mais prático e automatizado.
+
+# **Tratando caracteres dos dados (`strings`)**
+
+Ao trabalhar com dados que não são numéricos, como os dados caracteres (formato `charater`), é comum sistuações onde os dados em si não são os mesmos, mas apresentam certas semelhanças nos caracteres, nos seus `strings`. Exemplo: em uma base de dados, há uma variável para as cores encontrados em anfíbios.
+
+```{r}
+data.frame(cor=c("verde","amarelo","marrom","verde, amarelo","amarelo, marrom","preto","amarelo, preto"),indivíduo=paste0("indivíduo ",1:7))
+```
+
+Note que em uma mesma observação pode haver mais de uma cor. Se o objetivo fosse filtrar os indivíduos com cor `amarelo`, por exemplo, ao usar a função `filter()` para as ocorrências, os indivíduos 4, 5 e 7 ficariam de fora. Situações como estas podem ocorrer, onde a informação relevante não é a observação completa, mas `strings` específicos da observação. Para isso, é necessário filtrar os strings. Atualmente na linguagem de programação R, o pacote `stringr`, que pertence ao grupo do `Tidyverse`, é o que apresenta as principais ferramentas para estas situações. 
+
+Contudo, antes de começar, é importante ressalatar alguns pontos: assim como em outras linguagens de programação orientadas a objetos, na linguagem R, a forma como um string é escrito importa, então `a` não é o mesmo de `A`, assim como `2` não é a mesma coisa de `2.0`. Procure atentar-se a isso quando for trabalhar com strings.
+
+## Pacotes exigidos
+
+```{r}
+library(tidyverse)
+```
+
+## Carregando os datasets
+
+```{r}
+data(starwars) # Dataset sobre personagens da franquia Starwars
+
+head(starwars) # Visualizando os dados
+```
+
+## Contando a quantidade de strings nas observações
+
+É possível contar quantos strings um vector inteiro possui, assim como também seus valores individais, através da função `str_length()`, do pacote `stringr`.
+
+### De uma variável inteira
+
+Para contar `TODOS` os strings de uma variável de um dataset, basta apenas selecionar a variável, com a função `select()`, do pacote `dplyr`, e em seguida utilizar a função `str_length()`.
+
+```{r}
+starwars %>% 
+  select(skin_color) %>% 
+  str_length()
+```
+
+### Para cada valor individual
+
+Caso o que se deseje for contar a quantidade de strings para cada valor de uma variável, ao invés de usar a função `select()`, usa-se o operador `$`. Essa diferença ocorre porquê, ao usar a função `select()`, seleciona-se o formato daquele dataset (no caso do `starwars`, o formato `tibble`). Já com o operador `$`, a variável se trandforma num vetor em formato `character`.
+
+```{r}
+starwars$skin_color %>% str_length()
+```
+
+## Selecionando um grupo específicos de strings de um vetor
+
+Uma coisa interessante dos strings é que é possível selecionar apenas uma parcelas de strings de um vetor. Exemplo: existe uma variável contendo os dados de espécies seguidos de um `_local`, e deseja-se extrair apenas o nome das espécies. Para isso, usa-se a função `str_sub()`.
+
+### Selecionando baseado nos primeios strings
+
+Com o argumento `start=`, informa-se a partir de qual string começará a seleção. Nesse caso, começará a partir do 4º string.
+
+```{r}
+starwars$hair_color %>% str_sub(start=4)
+```
+
+### Selecionando baseado nos últimos strings
+
+O mesmo pode ser feito para os últimos strings, bastando apenas usar o argumento `end=`, informa-se a partir de qual string começará a seleção, mas agora selecionando os strings que antecedem a posição. Nesse caso, começará a partir do 3º string.
+
+```{r}
+starwars$hair_color %>% str_sub(end=3)
+```
+
+### Selecionado um intervalo específico de strings
+
+Alternativamente, é possil selecionar um intervalo específico, informando a posição em que a selecão começará e a posição onde a seleção terminará. Nesse caso, começará no 2º string e terminará no 4º.
+
+```{r}
+starwars$hair_color %>% str_sub(2,4)
+```
+
+## Combinando strings
+
+No caso de dois conjunto de dados contendo dados, como `character`, e o que se deseja for transformar tudo isso em uma coisa só, basta apenas usar a funçã `str_c()`, bastando apenas indicar no comando `sep=`o que irá separa-los. Nesse caso, apenas um ` `.
+
+```{r}
+dataset_character_1 <- "basta apenas usar"
+
+dataset_character_2 <- "a função str_c()"
+
+str_c(dataset_character_1, dataset_character_2, sep=" ")
+```
+## Substituindo strings
+
+É comum os casos onde uma base de dados possuem observações contendo mais de um valor, separados com algum caractére, e este caractére está errado, como `;` no lugar de uma `,`, e vice-versa. Para estas situações, é possível alterar as strings através da função `str_replace()`. Para esse exemplo, no dataset `Starwars`, as observações as `,` serão substituídas por `&`, utilizando a função `mutate`.
+
+```{r}
+starwars_strreplace <- starwars %>% 
+  mutate(hair_color = str_replace(hair_color,
+                                  ", ",
+                                  " & "),
+         skin_color = str_replace(hair_color,
+                                  ", ",
+                                  " & "))
+
+starwars_strreplace
+```
+
+No caso de alterar toda a base de daods, basta apenas usar um laço `for`. Nesse caso, foi criada um noo dataset contendo todas as informações do dataset `starwars`, e em seguida usado a função `str_replace`.
+
+```{r}
+for(i in colnames(starwars_strreplace <- starwars)){
+  starwars_strreplace[[i]] <- starwars_strreplace[[i]] %>% 
+    str_replace(", ", " & ")
+}
+
+starwars_strreplace
+```
+
+## Selecionado observações baseado em strings
+
+Na parte que foi falada sobre filtragem de observações,foi falado que a função `filter()` e derivadas, como a função `filter_all(), filtra observações baseado nos seus valores. O ponto é que, se o valor que você tentar filtrar não for exatamente como está na observação, não retornará o esperado. Em algumas situações, as observações podem contar mais de uma informação. Um exemplo disso seria um dataset sobre as espécies encontradas em diferentes localidades, onde cada linha é uma localidade, e na variável que contem as espécies, uma observação contém maus de uma espécie. Como então filtrar as observações que contém mais de uma espécie? Nessas situações, não se filtra a observação, mas sim um grupo específico de strings. 
+
+### Filtrando um grupo de strings de uma variável
+
+```{r}
+starwars
+```
+
+No dataset `starwars`, as variáveis da cor do cabelo (`hair_color`) e cor da pele (`skin_color`) possuem observações com mais de uma cor. Num exemplo, como filtrar da variável da cor do cabelo os personagens com cor de cabelo marrom (`brown`), seja ela apenas ou mais alguma cor junto? Para estas questões, usa-se a função função `str_detect()`. Nessa função, basta apenas primeiro informar a variável desejada, e em seguida o grupo de strings desejados.
+
+```{r}
+starwars %>% 
+  filter(str_detect(hair_color,"brown"))
+```
+
+### Filtrando mais de um grupo de strings de uma variável
+
+Existe também a possibilidade de filtrar mais de um grupo de strings. Semelhante ao ue foi feito anteriormente, baste apenas usar um, entre aspas, um `|` a cada grupo de strings desejados. Nesse exemplo, como o que se deseja é filtrar as observações com as cores marrom e branca, usa-se `"brown|white"`.
+
+```{r}
+starwars %>% 
+  filter(str_detect(hair_color,"brown|white"))
+```
+
+### Filtrando grupos de strings de mais de uma variável
+
+Agora será filtrado as observações com os strings `brown` para a variável de cor do cabelo e os strings `white` para a cor de pele. Como falado na sessão de filtragem de observações, ao fazer seleção de mais de uma variável pela função `filter()`, os comandos `&` e `|` tem diferenças. Nesse caos, como podem ser observações contendo uma das condições ou as duas ao mesmo tempo, usará o comando `|` para os comandos para a função `str_detect()`.
+
+```{r}
+starwars %>% 
+  filter(str_detect(hair_color,"brown") | str_detect(skin_color,"white"))
+```
+
+### Filtrando um grupo de strings para qualquer variável do dataset que o contenha
+
+No caso de um grupo de strings de interesse estiver espalhado para várias variáveis, e ao invés de selecionar variável por variável, uma alternativa é utilizar o função `any_vars()`, junto com a função `filter_all()`, como já foi feito na sessão de filtragem, no começo dessa apostila. Nesse caso, serão selecionadas todas as observações que contiverem o grupo de strings `fem`, para selecionar tanto o sexo quanto o gênero feminino.
+
+```{r}
+starwars %>% 
+  filter_all(any_vars(str_detect(.,"fem")))
+```
+
+### Filtrando por exclusão de um grupo de strings
+
+De forma semelhante à outras exclusões em filtragens de observações, basta apenas adicionar um `!` a frente da função `str_detect()`.
+
+```{r}
+starwars %>% 
+  filter(!str_detect(hair_color,"brown"))
+```
+

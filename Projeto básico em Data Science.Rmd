@@ -1,0 +1,188 @@
+---
+title: "Projeto básico em Data Science"
+author: "Edson Nilton de Moura SIlva Júnior"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: yes
+    toc_depth: 3
+    number_sections: yes
+    fig_caption: yes
+    theme: cosmo
+    toc_float:
+      collapsed: yes
+      smooth_scroll: yes
+---
+
+```{r setup, include=FALSE, message = FALSE, warning = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introdução
+
+Para essa apresentação básica em Data Science, serão utilizada funções básicas de tratamento de dados, principalmente com o pacote `tidyverse`, além de análises estatísticas, focando na resolução de problemas envolvendo estratégias de vendas em empresas. 
+
+# Pacotes exigidos
+
+Para começar, será carregado o pacote `tidyverse`. Este carrega automaticamente outros pacotes úteis no tratamento de dados, como remoção de dados faltantes (`NA`), manipulação dos dados e a parte de vizualização dos mesmos em plots.
+
+```{r}
+library(tidyverse)
+```
+
+# Base de dados utilizada
+
+Será utilizada a base de dados de serviços e clientes da empresa Telecom, através da plataforma online [Kaggle]("https://www.kaggle.com/datasets/sakshigoyal7/credit-card-customers"). 
+
+## Carregando a base de dados
+
+```{r}
+telecom <- readr::read_csv("telecom_users.csv")
+```
+
+## Vicualizando a base de dados
+
+A base de dados possui 5986 linhas, então com a função `slice_head()`, do pacote `dplyr`, foram carregadas apenas as 30 primeiras linhas.
+
+```{r}
+telecom %>% 
+  as.data.frame() %>% 
+  dplyr::slice_head(n = 30)
+```
+
+# Questões de análises
+
+Existem algumas observações da coluna de cancelamentos (`Churm`) em que o cliente cancelou o plano. Algumas análises importantes seriam: 
+
+1. Calcular a porcentagem desses cancelamentos;
+
+2. Entender se existe uma relação entre as outras variáveis da base de dados com o cancelamento;
+
+3. Baseado nas informações obtidas, propôr estratégias para diminuir a pocentagem de cancelamentos.
+
+Para isso, antes de tudo, é preciso fazer análises exploratória dos dados: explorá-los, para entender possíveis padrões e levantar hipóteses do que pode estar relacionado.
+
+# Análise Exploratórias
+
+## Tratamento dos dados
+
+Ao remover todas as linhas sem valores, foi visto que não sobrou nenhuma. Isso significa que, ao longo de toda a base de dados, todas as linhas tem algum dado do tipo `NA`, em alguma das 23 colunas. Isso significa que, para as análises que envolvem remover dados `NA` é necessário antes selcionar apenas as colunas de interesse.
+
+```{r}
+telecom %>% 
+  na.omit()
+```
+
+## média e desvio do `ValorMensal` e `Totalgasto`
+
+```{r}
+telecom %>% 
+  select(ValorMensal, TotalGasto) %>% 
+  na.omit() %>% 
+  summarise(`média do Valor Mensal` = mean(ValorMensal),
+            `desvio padrão do Valor Mensal` =  sd(ValorMensal),
+            `média do Total gasto` = mean(TotalGasto),
+            `desvio padrão do Total gastol` =  sd(TotalGasto))
+```
+
+## Análise Exploratória com gráficos
+
+```{r, message = FALSE, warning = FALSE}
+telecom$Aposentado <- telecom$Aposentado %>% 
+  as.factor()
+
+tema <- theme(text=element_text(family="TimesNewRoman"),
+            title=element_text(color="black",size=15),
+            axis.text = element_text(color="black",size=10),
+            axis.title = element_text(color="black",size=10),
+            panel.grid=element_line(color="grey75",linetype="dashed",size=0.7),
+            axis.line=element_blank(),
+            plot.background=element_rect(fill="white",color="white"),
+            panel.background=element_rect(fill="white"),
+            panel.border = element_rect(colour = "black",fill=NA,size=0.5),
+            legend.key= element_rect(color="white",fill="white"))
+
+for(i in telecom[,-c(1:2, 7, 20:23)] %>% names){
+  print(telecom %>% 
+          select(Churn, i) %>% 
+          na.omit() %>%  
+          group_by(.data[[i]]) %>% 
+          summarise(cancelamentos = n(),
+                    i = .data[[i]]) %>% 
+          unique() %>% 
+          ggplot(aes(i, cancelamentos, fill = i))+
+          geom_col(color = "black")+
+          labs(x = i,
+               fill = i)+
+          tema)
+}
+```
+
+# Análises estatísticas
+
+## % de cancelamentos
+
+É possível observar que a taixa de cancelamento está em 26,5%. Não está alta.
+
+```{r}
+telecom %>% 
+  group_by(Churn) %>% 
+  summarise(n())
+
+(1587*100)/5986
+```
+## Regressão Logística
+
+A regressão logística é uma técnica que permite testar se uma variável numérica contínua (`variável x`) está influenciando na variação de observações em uma variável categórica (`variável y`). Aqui, ela será usada para testar se o quanto os valores de das varáveis de meses como clientes, o valor mensal do plano e o total gasto pelo cliente (`variável x`) está influenciando na taxa de cancelamento (`variável y`).
+
+```{r, warning = FALSE}
+Telecom <- telecom %>% 
+  mutate(Churn = ifelse(telecom$Churn == "Sim", 1, 0))
+
+for(i in telecom[, -c(1, 4)] %>% select_if(is.numeric)){
+  
+  print(glm(Churn ~ i, family = binomial(link="logit"), data = Telecom) %>% 
+  summary()) 
+  
+}
+```
+
+Para exemplificar melhor, será feito gráfico de dispersão (`gráfico de pontos`).
+
+```{r, message = FALSE, warning = FALSE}
+for(i in telecom[, -c(1, 4)] %>% select_if(is.numeric) %>% names){
+  for(j in telecom[, -c(1, 4)] %>% select_if(is.numeric)){
+  }
+  print(Telecom %>% 
+          ggplot(aes(j, Churn))+
+          geom_point()+
+          geom_smooth(method = "glm")+
+          scale_y_continuous(breaks = seq(0,1,1))+
+          labs(x = i,
+               y = "Cancelamento")+
+          tema) 
+  
+}
+```
+
+# Conclusões
+
+## Variáveis categóricas
+
+Ao analisar as variáveis categóricas, as não numéricas, é possível notar algumas nuâncias: o gênero do cliente não tem influência no nº de cancelamentos, nem se o cliente é casado, se tem serviço de streaming ou serviço de filmes; contudo, é possível observar quem os aposentados tiveram menos cancelamentos de planos. Mais ainda, clientes coom dependentes, sem serviço de telefone, clientes sem telefone e com múltiplas linhas, sem serviço de internet e com DSL, com serviços de segurança, com serviços de Backup Online, com proteção de equipamento, com serviço de suporte técnico, contratos mais longos, com fatura não digital e boletos que não fossem eletrônicos tiveram menos cancelamentos.
+
+## Regressão Logística
+
+Além dessas análises, as análises de regressão logística mostraram que quanto mais tempo como cliente, maior o valor do plano e do total gasto pelo cliente, menores as chances de cancelamento dos mesmos.
+
+## Sugestões de estratégias que podem ser tomadas
+
+Estratégias que poderiam ser adotas seriam: 
+
+1. Incluir planos de serviços que abrangegm mais serviços, com menor preço adicional, além de mostrar os benefícios. Uma forma interessante seria um período de teste gratúito;
+
+2. Icentivar planos mais longos, dando descontos, onde, ao longo do período, cada mês estivesse mais barato que planos mensais, podendo envolver benefícios, alguns até acumuláveis. O importante é fazer o cliente permanecer cada vez mais;
+
+3. Icentivar planos família, com mais opções de serviços para diferentes faixas etárias, como planos com segurança e bloqueio de sites nocivoa para crianças;
+
+4. Icentivar o uso de formas de pagamentos não digitais, envolvendo benefícios e praticidades.

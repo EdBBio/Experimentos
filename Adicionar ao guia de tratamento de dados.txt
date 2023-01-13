@@ -1,0 +1,4 @@
+Adicionar ao guia de tratamento de dados
+- tratando strings
+- format()
+- package lubridate

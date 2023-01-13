@@ -1,0 +1,222 @@
+---
+title: "Outlier detect"
+author: "Edson Nilton de Moura SIlva Júnior"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: yes
+    toc_depth: 3
+    number_sections: yes
+    fig_caption: yes
+    theme: united
+    toc_float:
+      collapsed: yes
+      smooth_scroll: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# packages
+
+```{r}
+library(tidyverse)
+
+library(ggrepel)
+```
+
+# Dataset
+
+```{r}
+data("starwars")
+
+head(starwars)
+```
+
+# Detectting outliers
+
+## Function
+
+```{r}
+outlier_detect <- function(data){
+  
+  if(require("tidyverse") == TRUE){
+       library(tidyverse)
+    } else {
+    install.packages("tidyverse")
+    library(tidyverse)
+      }
+  
+  summarised_data <- summary(data)
+
+  interquartil_space <- (summarised_data[5] - summarised_data[2]) * 1.5
+
+  upper_outlier <- summarised_data[5] + interquartil_space
+
+  lower_outlier <- summarised_data[2] - interquartil_space
+    
+  upper_outlier_condition <- if(any(data %>% na.omit() > upper_outlier) == TRUE){
+             message("upper outlier: TRUE")
+              print(data %>%
+                      as.data.frame %>%
+                      dplyr::filter(data > summarised_data[5]) %>% 
+                      dplyr::filter(. > upper_outlier) %>%
+                      dplyr::pull() %>% 
+                      as.numeric())
+              } else {
+                message("upper outlier: FALSE")
+                } 
+    
+  lower_outlier_condition <- if(any(data %>% na.omit() < lower_outlier) == TRUE) {
+          message("lower outlier: TRUE")
+          print(data %>%
+                  as.data.frame %>%
+                  dplyr::filter(data < summarised_data[2]) %>% 
+                  dplyr::filter(. < lower_outlier) %>%
+                  dplyr::pull() %>% 
+                  as.numeric())
+          } else {
+            message("lower outlier: FALSE")
+          }
+  }
+```
+
+## Testing
+
+```{r}
+outlier_detect(data = starwars$mass)
+
+dataset_teste <- data.frame(starwars %>% 
+                              select(mass),
+                              object = "boxplot")
+
+dataset_teste %>% 
+  ggplot(aes(object, mass))+
+  geom_boxplot(fill = "yellow3",
+               color = "black",
+               outlier.shape = 21,
+               outlier.size = 2.5)+
+  geom_label_repel(aes(label = mass),
+                   fill = "yellow3")+
+  theme_minimal()
+```
+
+# Removing specific ouliers
+
+## Function
+
+```{r}
+outlier_remove <- function(data, outliers = ...){
+  
+  A <- require("tidyverse")
+  
+  if(A == TRUE){
+       library(tidyverse)
+    } else {
+    install.packages("tidyverse")
+    library(tidyverse)
+    }
+     
+  removing <- data %>% 
+    as.data.frame %>%
+    dplyr::filter(!data %in% outliers) %>% 
+    dplyr::pull() %>% 
+    as.numeric()
+  
+  return(removing)
+}
+```
+
+## Testing 
+
+```{r}
+removed <- outlier_remove(dat = starwars$height, outliers = c(264, 234, 228, 229))
+
+removed
+
+dataset_removed <- data.frame(values = removed,
+                              object = "boxplot")
+
+dataset_removed %>% 
+  ggplot(aes(object, values))+
+  geom_boxplot(fill = "yellow3",
+               color = "black",
+               outlier.shape = 21,
+               outlier.size = 2.5)+
+  geom_label_repel(aes(label = values),
+                   fill = "yellow3")+
+  scale_y_continuous(breaks = seq(60,270,10))+
+  theme_minimal()
+```
+
+# Removing all outliers
+
+## Function
+
+```{r}
+outlier_remove_all <- function(data){
+  
+  A <- require("tidyverse")
+  
+  if(A == TRUE){
+       library(tidyverse)
+    } else {
+    install.packages("tidyverse")
+    library(tidyverse)
+    }
+     
+  summarised_data <- summary(data)
+
+  interquartil_space <- (summarised_data[5] - summarised_data[2]) * 1.5
+
+  upper_outlier <- summarised_data[5] + interquartil_space
+
+  lower_outlier <- summarised_data[2] - interquartil_space
+    
+  upper_outlier_set <- data %>% 
+    as.data.frame %>%
+    dplyr::filter(data > summarised_data[5]) %>%
+    dplyr::filter(. > upper_outlier) %>%
+    dplyr::pull() %>% 
+    as.numeric()
+              
+  lower_outlier_set <- data %>%
+    as.data.frame %>%
+    dplyr::filter(data < summarised_data[2]) %>% 
+    dplyr::filter(. < lower_outlier) %>% 
+    dplyr::pull() %>% 
+    as.numeric()
+  
+  removing <- data %>% 
+    as.data.frame %>%
+    dplyr::filter(!data %in% upper_outlier_set & !data %in% lower_outlier_set) %>% 
+    dplyr::pull() %>% 
+    as.numeric()
+  
+  return(removing)
+}
+```
+
+## Testing
+
+```{r}
+removed_all <- outlier_remove_all(data = starwars$mass) 
+
+removed_all
+
+dataset_removed_all <- data.frame(values = removed_all,
+                                  object = "boxplot")
+
+dataset_removed_all %>% 
+  ggplot(aes(object, values))+
+  geom_boxplot(fill = "yellow3",
+               color = "black",
+               outlier.shape = 21,
+               outlier.size = 2.5)+
+  geom_label_repel(aes(label = values),
+                   fill = "yellow3")+
+  scale_y_continuous(breaks = seq(60,270,10))+
+  theme_minimal()
+```
+

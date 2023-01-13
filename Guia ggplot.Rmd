@@ -1,0 +1,2907 @@
+---
+title: "Guia do ggplot"
+author: "Edson Nilton de Moura Silva Júnior"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: yes
+    toc_depth: 3
+    number_sections: yes
+    fig_caption: yes
+    theme: united
+    toc_float:
+      collapsed: yes
+      smooth_scroll: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,message = FALSE)
+```
+
+# **O que é o ggplot**
+
+O ggplot é uma função da linguagem R, do package `ggplot2`, usado para a construção de gráficos e lidar com dados estatísticos. Nele, é possíve criar diferentes tipos de gráficos, com diferentes configurações, para diferentes tipos de demandas.
+
+## Usar o ggplot ou os plot normais?
+
+Se você já usa o R há algum tempo, e precisou criar gráficos, você já deve saber, mas se você começou agora nesse mundo, saiba que é possível criar gráficos apenas com o R, sem precisar de um package extra. Essas são as funções como `plot()`, `boxplot()` e `hist()`.
+
+## A praticidade do ggplot
+
+Por mais que os plots normais sejam mais fáceis de aprender, e relativamente mais rápidos, são muito rígidos e poucos práticos para configurá-los. No dia-a-dia das pesquisas, análises e relatórios, onde se está todo dia com diferentes tipos de dados, situações, exigências e demandas singulares, tanto para as análises quanto para expor esses resultados de diferentes maneiras a um público, como a apresentação de um seminário, uma banca avaliadora ou até uma empresa que contratou seus serviços, ter uma ferramenta como o ggplot, que permite que seja possível criar uma maior gama de diferentes tipos de gráficos, pode acabar sendo a diferença entre um gráfico informativo, prático e que economize tempo e dinheiro para entender um resultado e tomar uma decisão, e um gráfico ilegível e pouco entendível, gerando conflitos de interpretações, perda de tempo, de dinheiro, e até correndo o risco de tomar uma decisão errada. Tendo entendido o valor de se dedicar a entender e dominar o ggplot, vamos agora sim dar os primeiros passos.
+
+# **Primeiros passos**
+
+## Packages exigidos
+
+```{r}
+library(tidyverse)
+```
+
+Foi carregado o package `tidyverse`, que, aumaticamente, carrega o package `ggplot2`.
+
+## Carregando a base de dados
+
+```{r}
+SW<-starwars
+SW
+```
+
+Essa é uma base de dados já pronta do package `ggplot2`, sem ser necessário carregá-la externamente. Basta apenas chama-la por "starwars". É uma base de dados de diversos personagens da franquia Star Wars, com dados como altura, peso, gênero, sexo, etc. Há outras bases no ggplot2, que também podem ser utilizadas. É aconselhado sempre ler antes sua base de dados, para saber os tipos de dados que está lidando, como irá ser feito as análises, o gráfico, etc. Para ser mais fácil, essa base de dados foi atribuída ao objeto `SW`. Não apenas o package ggplot2, mas o próprio R possui bases de dddados já carregadas que você pode acessar, como a base de dados `iris`.
+
+## Criando o tema
+
+```{r}
+windowsFonts(TimesNewRoman = windowsFont("Times New Roman"))
+
+tema<-theme(text=element_text(family="TimesNewRoman"),
+            title=element_text(color="black",size=15),
+            axis.text = element_text(color="black",size=10),
+            axis.title = element_text(color="black",size=10),
+            panel.grid=element_line(color="grey75",linetype = "dashed",size=.5),
+            axis.line=element_blank(),
+            plot.background=element_rect(fill="white",color="white"),
+            panel.background=element_rect(fill="white"),
+            panel.border = element_rect(colour = "black", fill = NA,size=0.59),
+            legend.key= element_rect(color="white",fill="white"))
+```
+
+Os gráficos podem ser personalizados em relação à sua estetítica, escolhendo as cores do fundo, dos valores e das linhas de grade. Usa-se a função `theme()` para isso, e atribuiu o tema criado ao objeto `tema`. Será abordado com mais detalhes sobre isso no capítulo 17.
+
+## Especifcando os eixos
+
+```{r}
+SW %>%
+  ggplot(aes(height,mass))+
+  tema
+```
+
+Foi adicionada a função `%\>%` (pipe) à frente da base de dados `SW`. Essa é uma função do package `tidyr`, e serve para informar que comandos serão usados em sequência. Nesse caso, foi utilizado para indicar que que os dados utilizados no ggplot serão da base de dados `SW`. Alternativamente, dentro de `ggplot()`, é possível usar o comando `data=`, para indicar a base de dados que será utilizada. Logo abaixo, fez-se a construção do ggplot, onde uma das primeiras coisas ao se fazer no ggplot é especificar os eixos a serem usados. Para isso, usa-se a função `aes()` (aesthetically), que é a função que lida com a estética do gráfico, para indicar os eixos. O primeiro termo que você utilizar em `aes()` sempre será o `eixo X`, e o segundo, o `eixo Y`. Nestes, estarão variáveis da própria base de dados.
+
+## Comandos `color=`, `fill=`, `alpha=` e `label=`
+
+```{r}
+SW %>%
+  ggplot(aes(x=eye_color,y=mass))+
+  geom_boxplot(color="black",fill="green")+
+  geom_label(aes(label=name),size=2,alpha=0.2)+
+  tema
+```
+
+```{r}
+SW %>%
+  ggplot(aes(x=eye_color,y=mass))+
+  geom_boxplot(color="black",fill="green")+
+  geom_text(aes(label=name),size=2.5,alpha=1)+
+  tema
+```
+
+4 dos principais comandos que controlam as estéticas dos gráficos no ggplot são:
+
+* color: controla a cor de contorno que será utilizada;
+
+* fill: controla a cor de preenchimento que será utilizada;
+
+* alpha: controla a transparência do objeto do gráfico, onde varia de 0 (valor mínimo) até 1 (valor máximo);
+
+* label: controla os rótulos, caso use o comando `geom_label()` (primeiro gráfico), ou textos, caso use o comando `geom_text()` (segundo gráfico), que serão utilizados. Neste caso, tanto nos comandos `geom_label()` quanto `geom_text()` usaram o um `label=variável escolhida da base de dados` dentro de um `aes()`.
+
+O R usa um sistema de cores bastante vasto. É possível selecionar a cor colocando o nome da cor em inglês entre aspas (como na imagem abaixo), ou utilizando o sistema [Color-Hex](https://www.color-hex.com/), que consiste em um # seguido por código com 6 caractéres. Os gráfico utilizados foram do tipo boxplot, que será melhor abordado no capítulo 13.
+
+![As diversas tonalidades e paletas de cores que o R permite para o `color=` e o `fill=`. Ao serem urilizadas, devem estre entre aspas.](G:/Meu Drive/R/paletas.png)
+
+## Especificando os títulos dos eixos, do gráfico, das legendas e notas de roda-pé
+
+```{r}
+SW %>%
+  ggplot(aes(height,mass))+
+  labs(title="gráfico",
+       x="eixo x",
+       y="eixo y",
+       caption ="nota de roda-pé")+
+  tema
+```
+
+Mais ainda, é possível selecionar como estarão o título e os eixos, através da função `labs()`:
+
+* title: adiciona o título ao gráfico;
+
+* x: adiciona e altera o título do eixo X;
+
+* y: adiciona e altera o título do eixo y;
+
+* caption: adiciona uma nota de roda-pé.
+
+Além destes comandos básicos, todos aqueles que inseridos dentro do comando `aes()` podem ser adicionados e alterados no comando `labs()`. exemplos são os comandos `color=`, `fill=`, `alpha=` e `label=`. Se algum desses comandos for utilizado dentro do comando `aes()`, serão atribuidos à estas variáveis da base de dados, e para alterar o título destas nas legendas, basta apenas usar o mesmo comando em `labs()`, e atribuir o título que deseja. Exemplo:
+
+```{r}
+SW %>%
+  ggplot(aes(x=height,y=mass,color=sex,fill=gender,alpha=birth_year,label=name))+
+  geom_point()+
+  geom_label(size=0.5)+
+  labs(title="exemplo",
+       x="altura",
+       y="massa",
+       color="sexo do personagem",
+       fill="gênero do personagem",
+       alpha="ano de nascimento do personagem",
+       label="nome do personagem")+
+  tema
+```
+
+# **Gráfico de histograma**
+
+## Quando usar
+
+O hisograma é utilizado para criar uma distribuição de frequências, quando deseja-se divdir um conjunto de variáveis em intervalos (`eixo X`), e quantos dados cada um desses conjuntos possuem (`eixo Y`). Exemplo: da base de dados `starwars`, a maioria dos personagens possuem qual altura? É o que será feito agora.
+
+## Packages exigidos
+
+```{r}
+library(tidyverse)
+```
+
+## Carregando a base de dados
+
+```{r}
+SW<-starwars
+SW
+```
+
+## Criando o gráfico
+
+```{r}
+SW %>%
+  ggplot(aes(height))+
+  geom_histogram()+
+  tema
+```
+
+Após especificar os eixos, é preciso especificar o tipo de gráfico a ser feito. Para isso, se usa um `+` após a primeira linha do ggplot, para especificar os próximos passos a serem feitos. Para fazer um histograma, Se usa a função `geom_histogram`. Como os histogramas são gráficos de variáveis únicas, se usará apenas a variável `height`.
+
+## Colorindo o contorno das barras
+
+```{r}
+SW %>%
+  ggplot(aes(height))+
+  geom_histogram(color="black")+
+  tema
+```
+
+Com a função `color="black"` em `geom_histogram`, é possível criar linhas de borda que dividem e diferenciem as barras. As coresna linguagem R são escritas em `inglês` e em `aspas`, ou através de códigos do sistema de cores [Color Hex](https://www.color-hex.com/).
+
+## Colorindo as barras
+
+```{r}
+SW %>%
+  ggplot(aes(height))+
+  geom_histogram(fill="green",color="black")+
+  tema
+```
+
+Com a função `fill="green"`, é possível especificar o preenchimento das barras no histograma, que nesse caso, serão verdes. É possível também escolher outras cores.
+
+# **Gráfico de densidade**
+
+## Quando usar
+
+O gráfico de densidade é utilizado quando se deseja criar um resultado parecido ao de um histograma, `mas sem dividir os valores em categorias de intervalo`: não cria barras, mas sim uma linha que traça um caminho, sendo a sua altura equivalente à quantidade de repetições que aquele intervalo possui. No gráfico de densidade, o `eixo X` é contínuo, sem criar intervalores, sendo a gráficação representada por uma linha. Exemplo: da base de dados `starwars`, a maioria dos personagens possuem qual altura, mas de uma forma contínua? É o que será feito agora.
+
+## Packages exigidos
+
+```{r}
+library(tidyverse)
+```
+
+## Carregando a base de dados
+
+```{r}
+SW<-starwars
+SW
+```
+
+## Criando o gráfico
+
+```{r}
+SW %>%
+  ggplot(aes(x=height))+
+  geom_density(size=1)+
+  labs(title="densidade das alturas dos personagens de Starwars",
+       x="densidade dos dados",
+       y="altura")+
+  tema
+```
+
+Agora o gráfico de densidade será o feito. Ele é utilizado para entender em que espaço ou período mais os dados se concentram. Neste caso, foi feito um gráfico de densidade para entender qual é a altura da maioria dos personagens da base de dados `SW`. Como é possível observar no gráfico, a maioria dos personagens possui uma altura entre 1,5-1,8m.
+
+## Separando por cores em relação ao sexo dos personagens
+
+```{r}
+SW %>%
+  ggplot(aes(height,color=sex))+
+  geom_density(size=1)+
+  labs(title="densidade das alturas dos personagens de Starwars, 
+baseado pelo sexo",
+       x="densidade dos dados",
+       y="altura",
+       color="sexo")+
+  tema
+```
+
+No gráfico anterior, todos os personagens estavam em uma mesma linha de densidade, sem nenhuma descriminação por características deles. Agora, foram feitas linhas para os personagens em função do seu sexo, da variável `sex` da base de dados. Nesse caso, como se adicionará uma estética para diferenciar a altura baseado na variável sexo dos personagens, então se adicionaá `color=sex` na função `aes()`. Isso significa que as cores das linhas devem ser diferenciadas em relação ao sexo dos personagens. COmo é possível observar, quando é descriminado pelo sexo, os siferentes sexos possuem diferentes densidades nos seus dados.
+
+# **Gráficos de dispersão**
+
+## Quando usar
+
+O gráfico de dispersão é utilizado para interpretar como determinados dados são distribuídos em relação à uma variável contínua (`eixo X`) sobre outra variável contínua (`eixo Y`). É muito utilizado quando se deseja entender como um fator influenciando outro gera um perfil de comportamento em dados resultantes das interações dos fatores, como em estudos de regressão, que será explicado no capítulo 12. Exemplo: da base de dados `starwars`, personagens mais mais altos são mais pesados (possuem maior massa)? 
+
+## Packages exigidos
+
+```{r}
+library(tidyverse)
+```
+
+## Carregando base de dados
+
+```{r}
+SW<-starwars
+SW
+```
+
+## Pergunta: Personagens mais altos tem maior peso?
+
+```{r}
+SW %>%
+  ggplot(aes(height,mass))+
+  geom_point(color="darkgoldenrod4",fill="yellow",shape=21,size=4)+
+  labs(title="Alturas dos personagens de Starwars em relação à massa",
+       x="altura",
+       y="massa")+
+  tema
+```
+
+Como esse gráfico criado tem o intuíto de responder onde os pontos de realção das variáveis de massa (`mass`) e altura (`altura`) se estabelecem, com a função `geom_point()` é possível criar um gráfico de dispersão, através de pontos. Para isso, é preciso especificar as variáveis do eixo X e o eixo Y em `aes()`. Contudo, há um ponto muito alto, com um valor de massa > 1000, que compromete a interpretação. Para contornar isso, os dados devem ser filtrados.
+
+## filtrando os pontos discrepantes
+
+```{r}
+SW %>%
+  filter(mass<1000) %>%
+  ggplot(aes(height,mass))+
+  labs(title="Alturas dos personagens de Starwars em relação à massa",
+       x="altura",
+       y="massa")+
+  geom_point(color="darkgoldenrod4",fill="yellow",shape=21,size=4)+
+  tema
+```
+
+Como havia um ponto solitário com um valor muito alto > 1000, a interpretação do gráfico ficou comprometida. Para resolver isso, usa-se a função `filter()`, do package `dplyr`, onde esta faz um filtro dos tipo de dados que serão inseridos, e com base no que esses dados serão filtrados. Como deseja-se filtrar um ponto de massa muito alto, que gerou um aoutlier, é feito `filter(mass<1000)`, para especificar que só devem entrar dados de massa com valores abaixo de 1000.
+
+## Criando uma linha de tendência linear
+
+```{r}
+SW %>%
+  filter(mass<1000) %>%
+  ggplot(aes(height,mass))+
+  labs(title="Alturas dos personagens de Starwars em relação à massa",
+       x="altura",
+       y="massa")+
+  geom_point(color="darkgoldenrod4",fill="yellow",shape=21,size=4)+
+  geom_smooth(method="lm",color="red")+
+  tema
+```
+
+Agora, como se deseja saber qual é a tendência dos dados, para então responder a pergunta anteriormente feita, com a função `geom_smooth()` é possível criar uma linha de tendência, para então interpretar melhor como os valores se distribuem no gráfico. Com o argumento `lm`, cria-se uma `linha de tendência linear`. Com esses resultados, é possivel dizer que existe uma tendência de um personagem da base da dados ter mais massa quanto mais alto ser.
+
+## Modelo polinomial
+
+```{r}
+SW %>%
+  filter(mass<1000) %>%
+  ggplot(aes(height,mass))+
+  labs(title="Alturas dos personagens de Starwars em relação à massa",
+       x="altura",
+       y="massa")+
+  geom_point(color="darkgoldenrod4",fill="yellow",shape=21,size=4)+
+  geom_smooth(method="loess",color="red")+
+  tema
+```
+
+Além da linha de tendência linear, também épossível criar outras linhas de tendência. Com o argumento `method="loess"`, cria-se uma linha de tendência polinomial, mostrando que a linha segue de outra forma a distribuição dos dados.
+
+## Usando os dois métodos
+
+```{r}
+SW %>%
+  filter(mass<1000) %>%
+  ggplot(aes(height,mass))+
+  labs(title="Alturas dos personagens de Starwars em relação à massa",
+       x="altura",
+       y="massa")+
+  geom_point(color="darkgoldenrod4",fill="yellow",shape=21,size=4)+
+  geom_smooth(method="loess",color="red")+
+  geom_smooth(method="lm",color="red")+
+  tema
+```
+
+É possivel criar duas linhas antes feitas, ao mesmo tempo, apenas usando duas vezes a função `geom_smoth()`. Contudo, por serem da mesma cor, isso acaba prejudicando a interpretação. Para resolver isso, então é necessário defenciá-las, como por cores.
+
+## Diferenciando as linhas por cores
+
+```{r}
+SW %>%
+  filter(mass<1000) %>%
+  ggplot(aes(height,mass))+
+  labs(title="Alturas dos personagens de Starwars em relação à massa",
+       x="altura",
+       y="massa")+
+  geom_point(color="darkgoldenrod4",fill="yellow",shape=21,size=4)+
+  geom_smooth(method="loess",color="sienna1")+
+  geom_smooth(method="lm",color="royalblue1")+
+  tema
+```
+
+Usando o comando `color=` em cada `geom_smoth()`, é possível então fazer uma melhor interpretação das tendências, selecionando uma cor específica para cada tipo de linha.
+
+## Diferenciando os tipos de dados por cor. Pergunta: como é a tendência de cada sexo?
+
+```{r}
+SW %>%
+  filter(mass<1000) %>%
+  ggplot(aes(height,mass,color=sex,fill=sex))+
+  labs(title="Alturas dos personagens de Starwars em relação à massa,
+baseado pelo sexo",
+       x="altura",
+       y="massa",
+       color="sexo",
+       fill="sexo")+
+  geom_point(color="black",shape=21,size=4)+
+  geom_smooth(method="lm",aes())+
+  tema
+```
+
+Neste caso, como o objetivo é entender essa mesma relação, mas para cada um dos sexos dos personagens, será feito uma descriminação, baseada nessa característica. Para poder difernciar os dados por cores e fazer cada um ter sua linha de tendência, usa-se o argumento `color=sex` e `fill=sex` em `aes()`, para especificar que se deseja fazer uma diferenciação baseada no sexo dos personagens. Com esses dados, é possil ver que o sexo feminino é que teve a menor tendência.
+
+## Adicionar linhas horizontais e verticais
+
+```{r}
+SW %>%
+  filter(mass<1000) %>%
+  ggplot(aes(height,mass))+
+  labs(title="Alturas dos personagens de Starwars em relação à massa",
+       x="altura",
+       y="massa")+
+  geom_point(color="darkgoldenrod4",fill="yellow",shape=21,size=4)+
+  geom_hline(yintercept = 80)+
+  geom_vline(xintercept=125)+
+  tema
+```
+
+Caso fosse preferíveel separar os dados por setores, é também possível, traçando linhas que cortam o gráfico. Com a função `geom_hline()`, é possível traçar uma `linha horizontal` que corta o gráfico, especificando o ponto do eixo `Y` que a linha passará, através do argumento `yintercept=`. O mesmo vale para criar uma linha vertical, usando a função `geom_vline()`, com o argumento `xintercept=`. Os pontos que as linhas passarão serão os valores dos elementos `yintercept=` e `xintercept=`.
+
+## Definindo o tipo da linha
+
+```{r}
+SW %>%
+  filter(mass<1000) %>%
+  ggplot(aes(height,mass))+
+  labs(title="Alturas dos personagens de Starwars em relação à massa",
+       x="densidade dos dados",
+       y="altura")+
+  geom_point(color="darkgoldenrod4",fill="yellow",shape=21,size=4)+
+  geom_hline(yintercept = 80,linetype="dashed")+
+  geom_vline(xintercept=125,linetype="dotted")+
+  tema
+```
+
+Também é possível definir o tipo de linha pela função `linetype=`. O tipo de linha deve estar entre aspas, e em inglês.
+
+## Definindo a cor da linha
+
+```{r}
+SW %>%
+  filter(mass<1000) %>%
+  ggplot(aes(height,mass))+
+  labs(title="Alturas dos personagens de Starwars em relação à massa",
+       x="densidade dos dados",
+       y="altura")+
+  geom_point(color="darkgoldenrod4",fill="yellow",shape=21,size=4)+
+  geom_hline(yintercept = 80,linetype="dashed")+
+  geom_vline(xintercept=125,linetype="dotted",color="red")+
+  tema
+```
+
+Também é possível definir a cor da linha, pelo elemento `color=`.
+
+# **Gráficos de barras/colunas**
+
+## Quando usar
+
+O gráfico de barras é utilizado quando o objetivo é entender o quanto de unidades amostrais, contágens ou repetições uma variável qualitativa possui dentro de uma base de dados. Um exemplo é o quanto de observações são feitas para três espécies diferentes em algum local de estudo. Nesse gráfico, no `eixo X` ficam as `variável qualitativas`, e no `eixo Y` as `variáveis quantitativas`. É bastante semelhante ao gráfico de histograma e de sensidade, mas a diferença é que este usa, obrigatoriamente, `dados qualitativos no eixo X`. Exemplo: na base de dados `starwars`, qual é a cor de olho que a maioria dos personagens possuem?
+
+## Packages exigidos
+
+```{r}
+library(tidyverse)
+```
+
+## Carregando base de dados
+
+```{r}
+SW<-starwars
+SW
+```
+## Criando o gráfico
+
+```{r}
+SW %>%
+  ggplot(aes(eye_color,mass))+
+  geom_bar(stat = "identity")+
+  labs(title="Número de personagens por cores de olho",
+       x="cor do olho",
+       y="massa")+
+  tema
+```
+
+Nesse caso, foi graficado a massa de cada personagem baseado em sua cor de olho. Para isso, dentro do peimeiro `aes()`, foi adicionado uma variável qualitativa (cor do olho) ao `eixo X` e uma variável quantitativa (massa) ao `eixo Y`. Para usar o gráfico de barras, foi usada a função `geom_bar()`.
+
+## Gráfico baseado na quantidade de personagens pela cor de olho
+
+```{r}
+SW %>%
+  group_by(eye_color) %>%
+  summarise(
+    contagem = n()
+  ) %>%
+  ggplot(aes(eye_color,contagem))+
+  geom_bar(stat = "identity")+
+  labs(title="Número de personagens por cores de olho",
+       x="cor do olho",
+       y="n° de ocorrência")+
+  tema
+```
+
+Alternativamente ao modo do gráfico anterior, é possível criar gráfico com a altura das barras baseado no número de unidades amostrais de uma variável qualitativa, como o número de personagens por cada cor de olho. Uma forma de fazer isso é a base de dados possuir uma variável quantitativa com esses dados. Outro forma, é manipular os dados para criar essa contagem. No gráfico acima, foi feito isso, com a função `group_by()`, onde foram criados grupos baseado na cor dos olhos dos personagens, e a função `summarise()`, para a fazer a contagem destes dados e atribuido ao objeto `contagem`, para que fosse possível adicionar ao ggplot. 
+
+## Envertendo os eixos
+
+```{r}
+SW %>%
+  group_by(eye_color) %>%
+  summarise(
+    contagem = n()
+  ) %>%
+  ggplot(aes(eye_color,contagem))+
+  geom_bar(stat = "identity")+
+  labs(title="Número de personagens por cores de olho",
+       x="cor do olho",
+       y="n° de ocorrência")+
+  coord_flip()+
+  tema
+```
+
+Para que seja mais fácil de observar os nomes no `eixo X`, é poossível inveter a posição dos eixos, atraves da função `coord_flip()`.
+
+## Personalizando por cores
+
+```{r}
+SW %>%
+    group_by(eye_color) %>%
+    summarise(
+      contagem = n()
+    ) %>%
+    ggplot(aes(eye_color,contagem))+
+    geom_bar(stat = "identity",fill="lightblue",color="black")+
+  labs(title="Número de personagens por cores de olho",
+       x="cor do olho",
+       y="n° de ocorrência")+
+    coord_flip()+
+  tema
+```
+
+Mais ainda, é possível adicionar uma cor de contorno e preenchimento para as barras.
+
+## Adicionar rótulos
+
+```{r}
+SW %>%
+    group_by(eye_color) %>%
+    summarise(
+      contagem = n()
+    ) %>%
+    ggplot(aes(eye_color,contagem,label=contagem))+
+    geom_bar(stat = "identity",fill="lightblue",color="black")+
+  labs(title="Número de personagens por cores de olho",
+       x="cor do olho",
+       y="n° de ocorrência")+
+    coord_flip()+
+    geom_label()+
+  tema
+```
+
+Para ser mais visível de interpretar os valores de cada grupo, também é possível adicionar rótulos às barras, estes contendo os seus valores, com a função `geom_label()`.
+
+## Personalizando os rótulos
+
+```{r}
+SW %>%
+    group_by(eye_color) %>%
+    summarise(
+      contagem = n()
+    ) %>%
+    ggplot(aes(eye_color,contagem,label=contagem))+
+    geom_bar(stat = "identity",fill="green",color="black",alpha=0.5)+
+  labs(title="Número de personagens por cores de olho",
+       x="cor do olho",
+       y="n° de ocorrência")+
+    coord_flip()+
+    geom_label(size=3,fill="green")+
+    coord_flip()+
+  tema
+```
+
+Os rótulos também podem sua estética editada, sendo que `size=` altera o tamanho, `fill=` altera o preenchimento e `alpha=` altera a transparência.
+
+## Grupos múltiplos: agrupar por cor de olho e sexo
+
+```{r}
+SW %>%
+    group_by(eye_color,sex) %>%
+    summarise(
+      contagem = n()
+    ) %>%
+    ggplot(aes(eye_color,contagem,fill=sex))+
+    geom_bar(stat = "identity", color="black")+
+  labs(title="Número de personagens por cores de olho,
+em relação ao sexo",
+       x="cor do olho",
+       y="n° de ocorrência",
+       fill="sexo")+
+    coord_flip()+
+  tema
+```
+
+É possível também agrupar as barras em relação à porcentagem de uma variável da base de dados. Nesse caso, agrupando pelo sexo dos personagnes, dentro da função `aes()`, se adiciona a variável `fill=sex`.
+
+## Detalhes em brown, blue e black, barras lado a lado, com label
+
+```{r}
+ SW %>%
+    filter(eye_color %in% c("brown","blue","black")) %>%
+    group_by(eye_color,sex) %>%
+    summarise(
+      contagem = n()
+    ) %>%
+    ggplot(aes(eye_color,contagem,fill=sex, label=contagem))+
+    geom_bar(stat = "identity",position = "dodge",color="black", alpha=0.5)+
+  labs(title="Número de personagens por cores de olho,
+em relação ao sexo e 3 cores de olho específicas",
+       x="cor do olho",
+       y="n° de ocorrência",
+       fill="sexo")+
+    geom_label(position = position_dodge(width = 1))+
+  tema
+```
+
+Para separar apenas os olhos de cor marrom (`brown`), azul (`blue`) e preto (`black`), usa-se a função `filter()`, com o comando `%in%`, para a variável `eye_color`, especificando quais as cores de olho a serem selecionadas. Na função `group_by()`, se adicionará as variáveis `eye_color` e `sex` para especificar que se formaram grupos baseados na quantidade de indivíduos com uma cor de olho por determinado sexo, e então, a função `summarise()`.
+
+# **Gráficos de barras de erro**
+
+## Quando usar
+
+Esse gráfico pode ser utilizado em duas principais situações: quando se deseja entender o erro ou a incerteza dos dados trabalhados em uma análise ou quando os valores dos objetos de uma variável qualitativa possuem valores mínimos e máximos diferentes. No primeiro caso, quanto menor a barra de erro, menor a incerteza dos dados. Exemplo: na base dados `starwars`, numa análise do genêro dos personagens, qual gênero possui uma maior incerteza sobre os dados das suas alturas?
+
+## Packages exigidos
+
+```{r}
+library(tidyverse)
+```
+
+## Carregando os dados
+
+```{r}
+SW<-starwars
+SW
+```
+
+## Calcular o desvio padrão da altura entre os gêneros
+
+```{r}
+médias<-SW %>%
+  filter(!is.na(height)) %>%
+  group_by(gender) %>%
+  summarise(
+    media = mean(height),
+    limite_superior = mean(height) + sd(height),
+    limite_inferior = mean(height) - sd(height)
+  )
+médias 
+```
+
+Para a criação de um gráfico de desvio padrão, é necessário antes calcular a média, o `limite superior` e o `limite inferior` de uma variável da bse de dados. Nesse caso, procura-se saber da altura (`height`) em relação aos gêneros dos personagens. Para isso, é usado a função `filter()`, adicionando a função `!is.na` para retirar os valores nulos (`NA`) da altura. Logo em seguida, é feito o `group_by()` para a variável gênero (`gender`), o `summarise()`, para calcular a `média`, o `limite superior` e o `limite inferior`. Tudo isso então é atribuído ao objeto `médias`.
+
+## Criando o gráfico de barras de erro
+
+```{r}
+médias %>%
+  ggplot(aes(x=gender,y=media))+
+  labs(title="média da altura dos personagens em relação ao gênero",
+       x="gênero",
+       y="média")+
+  geom_bar(stat="identity",color="black")+
+  geom_errorbar(aes(ymin = limite_inferior, ymax =  limite_superior), width = 0.2)+
+  tema
+```
+
+Nesse caso, não se usará a base de dados `SW`, mas sim a base de dados `médias`. Para criar o gráfico de erro, será usado tanto a função `geom_bar()`, para criar as barras das médias em relação ao gênero, quanto a função `geom_errorbar()`, parar criar as barras de erro. Dentro de `geom_errorbar()`, na função `aes()`, é especificado o limite inferior (`ymin`), o limite superior (`ymin`) e a alarbura das barras de erro `width=`..
+
+## Criando o gráfico com pontos nos lugares das médias
+
+```{r}
+médias %>%
+  ggplot(aes(x=gender,y=media))+
+  labs(title="média da altura dos personagens em relação ao gênero",
+       x="gênero",
+       y="média")+
+  geom_pointrange(color="black",fill="gray",shape=21,size=1,
+                  aes(ymin = limite_inferior, ymax =  limite_superior))+
+  tema
+```
+
+É possível também substituir as barras, colocando pontos nos valores das médias, usando a função `geom_pointrange()`.
+
+## Difernciando por cores
+
+```{r}
+médias %>%
+  ggplot(aes(x=gender,y=media,fill=gender))+
+  labs(title="média da altura dos personagens em relação ao gênero,
+em relação so gênero",
+       x="gênero",
+       y="média",
+fill="gênero")+
+  geom_pointrange(color="black",shape=21,size=1,
+                  aes(ymin = limite_inferior, ymax =  limite_superior))+
+  tema
+```
+
+Para diferenciar as linhas e as médias em função do gênero, é adicionado a função `color=gender` na função `aes()`.
+
+## Exemplo de experimento
+
+```{r}
+dados<-data.frame(
+  metricas<-c("m1","m2","m3","m4","m5"),
+  limite_inferior<-c(-3.5,-2.5,1,4,8),
+  limite_superior<-c(1,1.5,3,7,10),
+  significativo<-c("não","não","sim","sim","sim")
+)
+dados %>%
+  ggplot(aes(metricas, color= significativo))+
+  geom_errorbar(size=1,aes(ymin = limite_inferior, ymax =  limite_superior),width=0.2)+
+  geom_hline(yintercept = 0,linetype="dotted",color="black")+
+  tema
+```
+
+Esse foi um experimento usando dados criados, para averiguar se o erro padrão dos elementos (m1, m2, m3, m4, m5). Para isso, dentro da função `aes()` se adicionou `color=significativo`, para separar os elementos ccom relção a essa variável. Como o erro padrão só é significativo com valores de `limite superior` e `limite inferior` forem acima de 0, então pode-se traçar uma linha horizontal no ponto 0 para melhor interpretar, pela função `geom_hline()`.
+
+## Alterando as métricas nos eixos
+
+```{r}
+dados %>%
+  ggplot(aes(metricas, color= significativo))+
+  geom_errorbar(size=1,aes(ymin = limite_inferior, ymax =  limite_superior),width=0.2)+
+  geom_hline(yintercept = 0,linetype="dotted",color="black")+
+  theme_light()+
+  coord_flip()+
+  tema
+```
+
+##### Também é possível alterar a posição dos eixos, pela função `coord_flip()`.
+
+# **Gráfico de linhas**
+
+## Quando usar
+
+Bem semelhante ao gráfico de dispersão, esse gráfico é utilizado quando se deseja entender o comportamento dos dados resultantes da interação de uma variável contínua (`eixo X`) com outra variável contínua (`eixo Y`). Mas ao invés de de usar pontos dispersos pelo gráfico, é utilizado uma ou mais linhas, sendo mais esse modelo de gráfico mais utilizado para tratar com séries temporais. Exemplo: utilizando a base de dados `economics`, como foi a taxa de desemprego dos Estados Unidos ao longo das décadas recentes? 
+
+## Packages exigidos
+
+```{r}
+library(tidyverse)
+library(gapminder)
+```
+
+## Carregando base de dados
+
+```{r}
+Ecs<-economics
+Ecs
+```
+
+Nesse caso, não será usado a base de dados `starwars`, mas sim a base de dados `economics`. Essa base de dados também é do package ggplot, que apresenta dados de séries econômicas da história dos Estados Unidos.
+
+## Criando o gráfico
+
+```{r}
+Ecs%>%
+  ggplot(aes(date,unemploy))+
+  labs(title="desemprego nos Estados Unidos entre 1970-2015",
+       x="data",
+       y="desemprego")+
+  geom_line(size=1)+
+  tema
+```
+
+Para criar um gráfico de linhas, usa-se a função `geom_line()`. Na função `aes()`, usar-se as variáveis de datas (`date`) para o eixo `X` e de desempregados/1000 (`unemploy`).
+
+## Definir a escala das datas
+
+```{r}
+Ecs%>%
+  ggplot(aes(date,unemploy))+
+  labs(title="desemprego nos Estados Unidos entre 1990-2000",
+       x="data",
+       y="desemprego")+
+  geom_line(size=1)+
+  scale_x_date(limits = c(as.Date("1990-01-01"),as.Date("1999-12-31")))+
+  tema
+```
+Em alguns casos, é desejável analisar um período específico, também é possível fazer um recorte de um período específico de tempo. Usa-se a função `scale_x_date()`, onde se definem as datas, já que avariável `date` é feita dados temporais, e está no eixo `X`. Se define da data inical e a final onde se deseja avaliar, onde a ordem da data é `ano-mês-dia`.
+
+## Gráficos de linhas com pontos
+
+```{r}
+Gap<-gapminder
+Gap
+```
+
+```{r}
+Gap%>%
+  filter(country=="Brazil") %>%
+  ggplot(aes(year,pop))+
+  labs(title="População brasileira entre 1955-2015",
+       x="data",
+       y="população")+
+  geom_line(size=0.7)+
+  geom_point(color="black",fill="yellow",shape=21,size=3.5)+
+  tema
+```
+
+Para criar pontos nas linhas, semelhante ao que o Excel produz, é necessário usar a função `gapminder`, carregando uma base de dados da população de diversos lugares do mundo, desde a década de 1950. Usa-se a função `filter()` para selecionar o Brasil, e então usa-se as funções `geom_line()` e `geom_point()`.
+
+## Gráfico com múltiplas linhas
+
+```{r}
+Gap%>%
+  filter(country %in% c("Brazil","Uruguay","Argentina")) %>%
+  ggplot(aes(year,pop,color=country,fill=country))+
+  labs(title="População da Argentina, Brasil e Uruguai entre 1955-2015",
+       x="data",
+       y="população",
+       color="país",
+       fill="país")+
+  geom_line()+
+  geom_point(color="black",shape=21,size=3)+
+  tema
+```
+
+Para analisar mais de um tipo de dado ao mesmo tempo, como entender o crescimento populacional de diferentes lugares numa mesma escala de tempo. Com a função `filter()`, é possível selecionar mais de um país por vez, através da função `country %in% c()`, e a função `color=country` em `aes()` para poder diferenciar os países através de cores diferentes.
+
+## Criando uma escala de cor
+
+```{r}
+Ecs%>%
+  ggplot(aes(date,unemploy,color=pop))+
+  labs(title="desemprego nos Estados Unidos entre 1970-2015",
+       x="data",
+       y="desemprego",
+       color="população")+
+  geom_line(size=1)+
+  tema
+```
+
+Como é um gráfico de linha, para selecionar a cor da linha, é selecionado a função `color=` no comando `aes()`. Nesse caso, para criar uma cor em função de um gradiente, é usado a variável `pop`. Por ser uma variável quantitativa contínua, a cor da linha está em um gradiente.
+
+### Alterando a cor da escala
+
+```{r}
+Ecs%>%
+  ggplot(aes(date,unemploy,color=pop))+
+  labs(title="desemprego nos Estados Unidos entre 1970-2015",
+       x="data",
+       y="desemprego",
+       color="população")+
+  geom_line(size=1)+
+  scale_color_gradient(low="yellow",high="brown")+
+  tema
+```
+
+Com a função `scale_color_gradient()` é possível selecionar um gradiente específico de cores selecionadas. O elemento `low=` é a cor dos valores mais baixos, e o elemento `high=` é a cor dos valores mais altos. É aconselhado usar cores claras em `low=` e cores mais escuras em `high=`.
+
+
+### Escolhendo uma paleta com mais cores
+
+```{r}
+Ecs%>%
+  ggplot(aes(date,unemploy,color=pop))+
+  labs(title="desemprego nos Estados Unidos entre 1970-2015",
+       x="data",
+       y="desemprego",
+       color="população")+
+  geom_line(size=1)+
+  scale_color_gradientn(colours =c("purple4","royalblue","dodgerblue","deepskyblue","mediumspringgreen","springgreen","green","lawngreen","greenyellow","yellow", "gold","darkorange","chocolate1","orangered","red","darkred"),breaks=seq(0,325000,20000))+
+  tema
+```
+
+Com o comando `scale_color_gradientn()`, com o comando interno `colours=c()`, é possível não apenas escolher um gradiente com mais cores, onde aqui foram usadas 16 cores diferentes, como também definir o intervalo dos valores do gradiente, com o comando interno `breaks=seq()`, onde o primeiro valor é o valor inicial, o segundo valor é o valor final e o terceiro valor é o intervalo de cada valor.
+
+# **Gráfico de frequência**
+
+## Quando usar
+
+Esse gráfico é utilizado quando se deseja identificar o quanto cada variável contribui para formar o todo, e qual variável se faz mais presente. É um tipo de gráfico bastante utilizado para identificar, dentro de um conjunto de eventos ou ações, quem mais apresentou ações, contribuições para formar o conjunto todo, ou seja, `frequência`, como na contribuição de certos funcionários para um produto. É semelhante ao gráfico de barras, mas nesse, é possível limitar à apenas `1 única barra`, ou até criar um `gráfico de pizza`. Exemplo: da base de dados `starwars`, qual gênero representa a maioria dos oersonagens? É o que será feito agora.
+
+## Packages exigidos
+
+```{r}
+library(ggplot2)
+library(tidyverse)
+```
+
+## Carregando base de dados
+
+```{r}
+SW<-starwars
+SW
+```
+
+## Criando a freqência de personagens por gênero
+
+```{r}
+gênero<-starwars %>%
+  group_by(gender) %>%
+  summarise(
+    n = n()
+  )
+gênero
+```
+
+Para facilitar o uso dos dados, foi atribuído ao objeto `gênero` a frequência dos gêneros da variável `gender`, através da função `group_by()` e `summarise()`, criando assim a variável `n`, correspondente ao nº de personagens de cada gênero.
+
+## Criando o gráfico
+
+```{r}
+gênero %>%
+  ggplot(aes(gender,n,fill=gender,label=n))+
+  labs(title="n° de personagens de Stawars por gênero",
+       x="gênero",
+       y="n° de ocorrência",
+       fill="gênero")+
+  geom_bar(stat="identity",color="black",alpha=0.5)+
+  coord_flip()+
+  geom_label(color="black")+
+  tema
+```
+
+Com a função `geom_bar()` para criar barras, com a função `stat=identity`, e `alpha=0.5` para deixar as barras transparente, a função `coord_flip` para enverter os eixos, a função `geom_label()` para adicionar rótulos às barras e a função `label=n` na função `aes()` para adicinar o valor dos rótulos, foi feito o gráfico de frequência.
+
+## Criando o gráfico com apenas 1 barra
+
+```{r}
+gênero %>%
+  ggplot(aes("",n,fill=gender,label=n))+
+  labs(title="n° de personagens de Stawars por gênero",
+       x=NULL,
+       y="n° de ocorrência",
+       fill="gênero")+
+  geom_bar(stat="identity",color="black",alpha=0.5,width=0.3)+
+  coord_flip()+
+  geom_label(position = position_stack(vjust=0.5),color="black")+
+  theme_void()+
+  tema
+```
+
+Removendo a variável `gender`, alterando a largura da barra com a função `width=0.3`, usando a função `position = position_stack(vjust=0.5)` para posicionar corretamente os rótulos e a função `theme_void()` para remover todos os elementos do fundo, fica apenas as barrras e seus respectivos rótulos.
+
+## Criando o gráfico de pizza
+
+```{r}
+gênero %>%
+  ggplot(aes("",n,fill=gender,label=n))+
+  labs(title="n° de personagens de Stawars por gênero",
+       x=NULL,
+       y=NULL,
+       fill="gênero")+
+  geom_bar(stat="identity",color="black",alpha=0.5,width=0.3)+
+  coord_flip()+
+  coord_polar(theta="y",start=0)+
+  geom_label(position = position_stack(vjust=0.5),color="black")+
+  tema
+```
+
+Com a função `coord_polar()`, é possível criar um gráfico circulas, de pizza, com os mesmos elementos usadoa anteriormente.
+
+# **Gráficos de correlação**
+
+## Quando usar
+
+O gráfico de correlação é utilizado para entender relações de porporcionalidade de covariância entre duas variáveis quantitativas contínuas, sendo esta uma relação diretamente proporcional (`positiva: à medida que uma variável cresce, a outra crescerá junto`) ou inversalmente proporcional (`negativa: à medida que uma cresce, outra diminuirá`). Exemplo: da base de dados `mtcars`, o peso dos carros está correlacionado com o nº de galões por milhas? É o que será feito agora.
+
+## Packages exigidos
+
+```{r}
+library(tidyverse)
+library(ggcorrplot)
+```
+
+## Carregando base de dados
+
+```{r}
+MC<-mtcars
+MC
+```
+
+Para esse exemplo, a base de dados usada sera a `mtcars`, que descreve dados de carros. Dados estes extraídoss de 1974 da Revista de Estadunidense de Tendência de Motores, e então essa base dados atribuída ao objeto `MC`.
+
+## calculando a métrica de correlação
+
+```{r}
+COR<-cor(MC$wt,MC$mpg)
+COR
+```
+
+Esse resultado mostra que há uma relação inversalmente proporcional entre as variáveis calculadas da correlação (`R=-0.86`). `próximo de R=1`: correlação diretamente proporcional; `próximo de R=0`: ausência de correlação; `próximo de R=-1`: correlação inversalmente proporciona.
+
+## Calculando a correlação de várias variáveis da de correlação
+
+```{r}
+CORR<-cor(MC)
+CORR
+```
+
+Com a função `cor()`, é possível calcular o indice de correlação entre as diversas variáveis da base de dados `MC`.
+
+## Criando um gráfico com as correlações feitas
+
+```{r}
+ggcorrplot(CORR)+
+  tema
+```
+
+Criando índices de correlação das variáveis da base de dados `mtcars` e atribuindo ao objeto `CORR`, usando a função `ggcorplot()`, é possível criar um gráfico de correlação das variáveis. Nesse tipo de gráfico, os pontos mais vermelhos representam as maiores correlações diretalmente proporcionais, e os pontos mais azuis representam as maiores correlações inversalmente porporcionais.
+
+## Criando um gráfico com as correlações feitas, mas com círculos
+
+```{r}
+ggcorrplot(
+  CORR,
+  method="circle"
+  )+
+  tema
+```
+
+Também é possível usar círculos como os pontos das correlação, através do comando `method="circle"`.
+
+## Ordenamento das variáveis por agrupamento hierarquico
+
+```{r}
+ggcorrplot(
+  CORR,
+  method="circle",
+  hc.order=TRUE
+)+
+  tema
+```
+
+Também é possível agrupar de maneira hierarquica, para facilitar o entendimento do gráfico em realação às correlações das variáveis, com o comando `hc.order=TRUE`.
+
+## Gráfico sem espelhamento
+
+```{r}
+ggcorrplot(
+  CORR,
+  method="circle",
+  hc.order=TRUE,
+  type="lower"
+)+
+  tema
+```
+
+Nos gráficos anteriores, eram gráficos espelhados, o que poderia torná-los não apenas redundantes, como também poder comprometer a sua interpretação. Para solucionar essa questão, Com a função `type="lower"` é possível criar um gráfico mais simples.
+
+## Adicionando o valor da correlação
+
+```{r}
+ggcorrplot(
+  CORR,
+  method="circle",
+  hc.order=TRUE,
+  type="lower",
+  lab=TRUE
+)+
+  tema
+```
+
+Para facilitar mais ainda o entendimento, é possível também adicionar os valores aoss pontos da correlação, com a função `lab=TRUE`.
+
+## Alterando o tamanho da fonte
+
+```{r}
+ggcorrplot(
+  CORR,
+  method="circle",
+  hc.order=TRUE,
+  type="lower",
+  lab=TRUE,
+  lab_size = 3.5
+)+
+  tema
+```
+
+Em caso do valor ficar desporpociaonal aos tamanhos dos pontos da correlação, também é possível ajustar o tamanho da fonte dos rótulos, com a função `lab_size=3.5`.
+
+## Deixar em branco as correlações não significativas
+
+```{r}
+ggcorrplot(
+  CORR,
+  method="circle",
+  hc.order=TRUE,
+  type="lower",
+  lab=TRUE,
+  lab_size = 3.5,
+  p.mat = cor_pmat(MC),
+  insig = "blank"
+)+
+  tema
+```
+
+Para fins didáticos, em caso de apenas desejar os pontos com valores de correlação significativos, também é possível excluir os valores não significativos (`<0.5, >-0.5`).
+
+## Alterando o título da legenda
+
+```{r}
+CORR<-cor(MC)
+ggcorrplot(
+  CORR,
+  method="circle",
+  hc.order=TRUE,
+  type="lower",
+  lab=TRUE,
+  lab_size = 3,
+  p.mat = cor_pmat(MC),
+  insig = "blank",
+  legend.title="coeficiente de correlação"
+)+
+  tema
+```
+
+Com a função `legend.title=`, é possível determinar o título do da legenda do gráfico de correlação.
+
+## Definindo as cores
+
+```{r}
+CORR<-cor(MC)
+ggcorrplot(
+  CORR,
+  method="circle",
+  hc.order=TRUE,
+  type="lower",
+  lab=TRUE,
+  lab_size = 3,
+  p.mat = cor_pmat(MC),
+  insig = "blank",
+  legend.title="coeficiente de correlação",
+  colors=c("red","yellow","green")
+)+
+  tema
+```
+
+Com a função `colors=c()`, é possível escolher as conres. Devem ser escolhidos três cores, com seus nomes em inglês e entre aspas. É aconselhado que a segunda cor seja uma cor que consiga ser transitória entre os extremos.
+
+# **Gráfico de regressão**
+
+## Quando usar
+
+Semelhante ao gráfico de correlação, o gráfico de regressão é utilizado quando as análises são feitas com dados com `variáveis dependentes` e `variáveis independentes`, quando há sim uma relação de causalidade entre as variáveis, através de uma graficação de dispersão de pontos no gráfico. Nesse caso, o objetivo desse gráfico é mostrar as realações de causa e efeito, através tanto da dispersão dos dados quanto pelo parâmetro R². Exemplo: na base de dados `mtcars`, o nº de cilindros é ditado pelo nº de galões por milhas? 
+
+## Packages exigidos
+
+```{r}
+library(tidyverse)
+library(ggpubr)
+```
+
+## Carregando base de dados
+
+```{r}
+MC<-mtcars
+MC
+```
+
+## Criando gráfico de correlação
+
+```{r}
+MC %>%
+  ggplot(aes(carb, mpg))+
+  labs(title="relação entre o n° carburadores por nº milhas/galão",
+       x="n° de carburadores",
+       y="nº milhas/galão")+
+  geom_point(color="darkgoldenrod4",fill="yellow",shape=21,size=4)+
+  tema
+```
+
+Para criar o gráfico de regressão, primeiro é feito o gráfico de dispersão, usando a função `geom_point()`, e adicionando às variáveis `carb` ao eixo `X` e `mpg` ao eixo `Y`, dentro do comando `aes()`.
+
+## Criando a curva de regressão
+
+```{r}
+MC %>%
+  ggplot(aes(carb, mpg))+
+  labs(title="relação entre o n° carburadores por nº milhas/galão",
+       x="n° de carburadores",
+       y="nº milhas/galão")+
+  geom_point(color="darkgoldenrod4",fill="yellow",shape=21,size=4)+
+  geom_smooth(method = "lm", col="red", se=FALSE,formula = "y~x")+
+  tema
+```
+
+É então calculada a curva de regressão dos dados, com a função `geom_smooth()`. É usado o comando `method="lm"`, assim como anteriormente doi feito nos gráficos de dispersão.
+
+## Criando a equação derivada da regressão e o R²
+
+```{r}
+MC %>%
+  ggplot(aes(carb, mpg))+
+  labs(title="relação entre o n° carburadores por nº milhas/galão",
+       x="n° de carburadores",
+       y="nº milhas/galão")+
+  geom_point(color="darkgoldenrod4",fill="yellow",shape=21,size=4)+
+  geom_smooth(method = "lm", col="red", se=FALSE,formula = "y~x")+
+  stat_regline_equation(aes(label=paste(..eq.label..,..rr.label..,sep = "~~")),size=5)+
+  tema
+```
+
+
+Para calcular a função geradora da curva e o R2, usa-se a função `stat_regline_equation(aes(label=paste(..eq.label..,..rr.label..,sep = "~~")))`, Criando assim tanto a `função geradora dos dados do gráfico`, quanto o `R²`. Esses resultados mostram que há uma mínima relação nº de carburadores e o nº de milhas/galão, com a variável independente (`eixo X`) explicando `30%` dos dados observados na variável dependente (`eixo Y`), sendo esta uma relação inversalmente proporcional.
+
+## Alterando a posição da equação derivada e do R²
+
+```{r}
+MC %>%
+  ggplot(aes(carb, mpg))+
+  labs(title="relação entre o n° carburadores por nº milhas/galão",
+       x="n° de carburadores",
+       y="nº milhas/galão")+
+  geom_point(color="darkgoldenrod4",fill="yellow",shape=21,size=4)+
+  geom_smooth(method = "lm", col="red", se=FALSE,formula = "y~x")+
+  stat_regline_equation(aes(label=paste(..eq.label..,..rr.label..,sep = "~~")),size=5,label.x=5,label.y=32.5)+
+  tema
+```
+
+Dentro do comando `stat_regline_equation()`, usando os comandos internos `label.x=` e `label.y=`, é possível aterar a posição da equação derivada da requessão e do R², escolhendo os pontos no eixo X e no eixo Y, respctivamente.
+
+# **Gráfico de boxplot**
+
+## Quando usar
+
+O gráfico de boxplot é utilizado quando há variáveis qualitativas, `em que cada um dos objetos da variável qualitativa apresenta um conjunto de dados`, dados esses da variável quantitativa, como em dados de pH em três trechos específicos de um fragmento de mata ao longo dos 12 meses do ano. Nesse gráfico, são criados [`boxplots`](https://www.khanacademy.org/math/statistics-probability/summarizing-quantitative-data/box-whisker-plots/a/box-plot-review), sendo assim, o gráfico de boxplot é um gráfico com uma variável qualitativa (`eixo X`) e uma varável quantitativa (`eixo Y`). Exemplo: da base de dados `starwars`, qual a variação da altura dos personagens em função da cor dos olhos? É o que será feito agora.
+
+## Packages exigidos
+
+```{r}
+library(tidyverse)
+```
+
+## Carregando base de dados
+
+```{r}
+SW<-starwars
+SW
+```
+
+##### Novamente, será trabalhado com a base de dados `starwars`.
+
+## Criando o boxplot
+
+```{r}
+SW %>%
+  ggplot(aes(skin_color, height))+
+  labs(title="altura dos persoanagens em relação à cor do olho",
+       x="cor da pele",
+       y="altura")+
+  geom_boxplot(fill="green", color="black")+
+  tema
+```
+
+Para criar os boxplot, deve ser ecolhida uma variável qualitativa para o eixo `X`, como a cor da pele (`skin_color`), e uma quantitativa para o eixo `Y`, como a altura (`height`). Para produzir os boxplots, usa-se a função `geom_boxplot()`. Porém, são muitos boxplots, prejudicando o a interpretação dos dados.
+
+## Filtrando os tipos de cores de pele que aparecem
+
+```{r}
+SW %>% 
+  filter(skin_color %in% c("light","dark","green","fair")) %>% 
+  ggplot(aes(skin_color, height))+
+  labs(title="altura dos persoanagens em relação à cor do olho",
+       x="cor da pele",
+       y="altura")+
+  geom_boxplot(fill="green", color="black")+
+  tema
+```
+
+É possível também selecionar uma cor para cada boxplot. Através do comando `fill=skin_color` foi possível colorir os boxplots de acordo com seus grupos.
+
+## Selecionando um grupo de cores específicas do preenchimento dos boxplots
+
+```{r}
+SW %>% 
+  filter(skin_color %in% c("light","dark","green","fair")) %>% 
+  ggplot(aes(skin_color, height,fill=skin_color))+
+  labs(title="altura dos persoanagens em relação à cor do olho",
+       x="cor do olho",
+       y="altura",
+       fill="cor da pele")+
+  geom_boxplot(color="black")+
+  scale_fill_manual(values = c("#5D5D5D","#E5BB91","green1","cyan"))+
+  tema
+```
+
+Com a função `scale_fill_manual()` é possível selecionar uma paleta de cores específicas para os preenchimentos dos boxplots, facilitando a interpretação de cada boxplot.
+
+## Selecionando um grupo de cores específicas da borda dos boxplots
+
+```{r}
+SW %>% 
+  filter(skin_color %in% c("light","dark","green","fair")) %>% 
+  ggplot(aes(skin_color, height,fill=skin_color,color=skin_color))+
+  labs(title="altura dos persoanagens em relação à cor do olho",
+       x="cor do olho",
+       y="altura",
+       fill="cor da pele",
+       color="cor da pele")+
+  geom_boxplot()+
+  scale_fill_manual(values = c("#5D5D5D","#E5BB91","green1","cyan"))+
+  scale_color_manual(values = c("red","yellow","darkgreen","blue"))+
+  tema
+```
+
+Também é possível escolher as cores da borda de cada boxplot. Para isso, é preciso primeiro especificar à função `aes()` o comando `color=skin_color`, para especificar que as cores das bordas variam em função da cor de pele dos personagens. Após, é adicionada a função `scale_color_manual()`, seguindo os mesmos passos da função `scale_fill_manual()`, sendo que agora o que será selecionado serão as cores das bordas de cada um dos boxplots. Outro ponto importante é: quando você atribui a `fill=` e `color=` o mesmo título, eles acabam se tornando a mesma legenda.
+
+# **Adicionado texto ao gráfico**
+
+## Quando usar
+
+Em algumas situações específicas, se faz necessário o uso de textos, com o intúito apontar ou enfatizar informações no gráfico em questão. Um exemplo é quando linhas são traçadas, como com as funções `geom_hline()` e `geom_vline()`, em que deseja-se delimitar regiões ou limites dos dados trabalhados, o uso de textos para explicar e apontar estes limites torna-se um recurso útil. Outro bom exemplo é no uso de mapas, onde é possível combinar os textos com labels, criar legendas para as regiões do mapa.
+
+## Packages exigidos
+
+```{r}
+library(tidyverse)
+```
+
+Primeiro, foi carregada o package `ggplot2`, para conseguir produzir os gráficos ggplot, assim como carregar bases de dados a seres analisadas. Em seguida, foi carregado o package `tidyverse`, para melhor manipular e trabalhar com os dados utilizados
+
+## Base de dados
+
+```{r}
+resposta<-c(0,0,0.05,0.06,0.1,0.15,0.2,0.37,0.45,0.5,0.68,0.74,0.82,0.95,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0.05,0.09,0.15,0.27,0.39,0.42,0.5,0.62,0.78,0.83,0.91,1,1,1,1,1,1,1,1)
+
+dose<-(rep(c(0,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180,190,200,210,220,230,240,250,260,270,280,290,300),2))
+
+espécies<-(rep(c("sp1","spe2"),each=31))
+
+dados.toxicidade<-data.frame(resposta,dose,espécies)
+dados.toxicidade
+```
+
+Para a construção do gráfico, foi criada uma base de dados de toxidade de uma substância na água em função da sua toxicidade (mortalidade) em duas espécies, e atribuído ao objeto `dados.toxicidade`. Primeiro, foi criada a variável `resposta`, e atribuído a esta os valores de % de mortalidade de cada espécies às diferentes concentrações da susbtância. Após, foi criada a variável `dose`, e atribuindo à esta os valores das concentrações testadas para cada espécie. Em seguida, foi criada a variável `espécies`, e utilizando a função `rep()`, foram adicionados as espécies testadas, com 15 repetições para ambas. Por último, foi criado o data frame `dados.toxicidade`, através da função `data.frame()`, utilizando as variáveis `resposta`, `dose` e `espécies`.
+
+## Criando o gráfico
+
+```{r}
+dados.toxicidade %>% 
+  ggplot(aes(dose,resposta,color=espécies))+
+  geom_line(size=2)+
+  labs(title="respostas das espécies às concentrações da substância",
+       x="dose (mg/L)",
+       y="mortalidade (%)",
+       color="espécies")+
+  geom_hline(yintercept=0.5,color="red",linetype="dashed",size=1)+
+  geom_vline(xintercept=90,color="darkgreen",size=1)+
+  geom_vline(xintercept=180,color="darkred",size=1)+
+  scale_x_continuous(breaks=seq(0,300,20))+
+  scale_y_continuous(breaks=seq(0,1,0.1))+
+  scale_color_manual(values=c("green1","red"),labels=c("espécie 1","espécie 2"))+
+  tema
+```
+
+Com os dados da base de dados `dados.toxicidade`, é possível criar o gráfico. Para se tornar mais didático, será adicionado textos.
+
+## Adicionando texto ao gráfico
+
+```{r}
+dados.toxicidade %>% 
+  ggplot(aes(dose,resposta,color=espécies))+
+  geom_line(size=2)+
+  labs(title="respostas das espécies às concentrações da substância",
+       x="dose (mg/L)",
+       y="mortalidade (%)",
+       color="espécies")+
+  geom_hline(yintercept=0.5,color="red",linetype="dashed",size=1)+
+  geom_vline(xintercept=90,color="darkgreen",size=1)+
+  geom_vline(xintercept=180,color="darkred",size=1)+
+  scale_x_continuous(breaks=seq(0,300,20))+
+  scale_y_continuous(breaks=seq(0,1,0.1))+
+  scale_color_manual(values=c("green1","red"),labels=c("espécie 1","espécie 2"))+
+  geom_text(aes(x = 29.5, y = 0.55),
+                label = "50% de mortalidade",
+            size = 4, 
+            color = "red")+
+  tema
+```
+
+Usando a função `geom_text()` é possível adicionar textos ao gráfico. Dentro da função `aes()`:
+
+* x: posição do eixo X onde o texto se encontrará;
+
+* y: posição do eixo Y onde o texto se encontrará.
+
+Fora da função `aes()`:
+
+* size: tamanho da letra;
+
+* color: cor do texto.
+
+Nesse caso, como é de interesse saber saber a marca onde atingiu 50% de mortalidade, não apenas foi traçada uma linha no ponto 0.5 do eixo Y, como foi aí adicionado o texto.
+
+```{r}
+dados.toxicidade %>% 
+  ggplot(aes(dose,resposta,color=espécies))+
+  geom_line(size=2)+
+  labs(title="respostas das espécies às concentrações da substância",
+       x="dose (mg/L)",
+       y="mortalidade (%)",
+       color="espécies")+
+  geom_hline(yintercept=0.5,color="red",linetype="dashed",size=1)+
+  geom_vline(xintercept=90,color="darkgreen",size=1)+
+  geom_vline(xintercept=180,color="darkred",size=1)+
+  scale_x_continuous(breaks=seq(0,300,20))+
+  scale_y_continuous(breaks=seq(0,1,0.1))+
+  scale_color_manual(values=c("green1","red"),labels=c("espécie 1","espécie 2"))+
+  geom_text(aes(x = 29.5, y = 0.55),
+                label = "50% de mortalidade",
+            size = 4, 
+            color = "red")+
+  geom_text(aes(x = 85, y = -0.03),
+                label = "dose com 50% de letalida",
+            size = 3.5, 
+            color = "darkgreen")+
+  geom_text(aes(x = 190, y = -0.03),
+                label = "dose com 50% de letalida",
+            size = 3.5, 
+            color = "darkred")+
+  tema
+```
+
+Além da linha que delimita o ponto de 50% de mortalidade, é possível também marcar o ponto da dose onde causa 50% de letalidade, para ambas as espécies.
+
+# **Salvando o gráfico no dispositivo**
+
+## Quando usar
+
+Como muitas vezes aqueles gráficos produzidos irão para algum destino, como alguma atividade, seminário, artigo, relatório ou tese, é preiso que aquele gráfico produzido no ggplot seja exportado. Há duas principais maneiras: manualmente na aba dos `plots` ou através da função `ggsave()`.
+
+## Exportando a partir da aba de plots
+
+![](G:/Meu Drive/R/Export1.jpg)
+
+Na região marcada em `vermelho` é onde começa a exportação, onde o gráfico poderá ser enviado para alguma área do computador do usuário.
+
+![](G:/Meu Drive/R/Export2.jpg)
+
+Na região marcada em `vermelho`, há os formatos possíveis a ser exportados os arquivos, como em `imagem`, `PDF` ou até copiar, como um simples `ctrl+C`. A escolha vai do desejo do usuário, mas aqui iremos usar o formato de `imagem`, marcado em `amarelo`.
+
+![](G:/Meu Drive/R/Export3.jpg)
+
+Na região marcada em `vermelho` é o formato do arquivo que será selecionado para exportar a imagem, sendo os formatos disponíveis para imagem: `PNG`, `JPG`, `JPEG`, `TIFF`, `BMP`, `Metafile`, `SVG` e `EPS`. A região marcada em `laranja` é o diretório, o local do dispositivo onde arquivo será exportado. A região marcada em `amarelo` é o nome do arquivo que será exportado. A região marcada em `verde` é a largura da imagem, em `azul` a altura. A região marcada em `roxo` é onde salvar e começar a exportar a imagem, em `rosa` cancelar toda a ação. Porém há um jeito mais simples de salvar o gráfico, a partir da função `ggsave()`, do package `ggplot`.
+
+## Salvando o gráfico com a função ggsave
+
+### O que é o ggsave
+
+Como já falado antes, a função `ggsave()` é uma função do package `ggplot`, que salva o último gráfico plotado para um diretório do dispositivo.
+
+### Packages exigidos
+
+```{r}
+library(tidyverse)
+```
+
+### Carregando base de dados
+
+```{r}
+SW<-starwars
+SW
+```
+
+Para fins práticos, será feito com o último gráfico boxplot feito.
+
+### Salvando
+
+```{r}
+SW %>% 
+  filter(skin_color %in% c("light","dark","green","fair")) %>% 
+  ggplot(aes(skin_color, height,fill=skin_color))+
+  geom_boxplot(color="black")+
+  labs(title = "Altura dos personagens em função da cor de pele",
+       x="Cor de pele",
+       y="Altura (cm)",
+       fill="cor de pele")+
+  scale_fill_manual(values = c("#5D5D5D","#E5BB91","green1","cyan"))+
+  tema
+ggsave(filename = "G:/Meu Drive/R/Gráfico_Export.png")
+```
+
+Com a função `filename = "G:/Meu Drive/R/Gráfico_Export.png"`, é informado dois elementos: 1) o diretório onde o gráfico será exportado (`G:/Meu Drive/R/`); 2) o nome do arquivo, com o seu formato (`Gráfico_Export.png`).
+
+### Vendo que o gráfico foi exportado para o dispositivo
+
+![](G:/Meu Drive/R/Export4.jpg)
+
+Como feito no ggsave, o gráfico foi exportado para o diretório selecionado.
+
+### Vendo o gráfico então exportado
+
+![](G:/Meu Drive/R/Gráfico_Export.png)
+
+Como visto, o gráfico foi exportado com sucesso. Também é preciso saber que o `ggsave()` exporta o `último gráfico plotado`, independente se a linha de código do `ggsave()` está abaixo das linhas do ggplot que se deseja exportar. Por isso, antes de exportar seu gráfico, `certifique-se que o seu gráfico escolhido foi plotado`.
+
+# **Gráficos interativos**
+
+Tudo que foi mostrado aqui são gráficos parados, sem nenhum tipo de interação com quem o está fazendo ou o lendo. Porém, `há um jeito de tornar os gráficos criados no R interativos, como se fossem um dashboard`
+
+## Packages exigidos
+
+```{r}
+library(tidyverse)
+library(plotly)
+library(htmlwidgets)
+```
+
+Porém, dessa vez, além de dos pacotes básicos já usados, serão também utilizados mais dois novos. O package `plotly` é usado para criar os gráficos interativos, como um `dashboard`. Já o package `htmlwidgets` para salvar os gráficos, com eles continuando por serem interativos.
+
+## Carregando base de dados
+
+```{r}
+SW<-starwars
+SW
+```
+
+Para esse exemplo, continuará sendo usado a base de dados `Starwars`.
+
+## Criando o gráfico
+
+```{r}
+Gráfico<-SW %>%
+  filter(mass<1000) %>%
+  ggplot(aes(height,mass,fill=eye_color))+
+  labs(title="relação entre a altura e a massa dos personagens",
+       x="altura",
+       y="massa",
+       color="cor do olho")+
+  geom_point(color="black",shape=21,size=4)+
+  scale_color_manual(values=c("black","blue","#597DAB","#875E1E","#B2FF00","#FFB727","orange","red","#A9A9A9","white","yellow"))+
+  tema
+Gráfico
+```
+
+Para o exemplo que será feito com um gráfico interativo, será utilizado um gráfico de pontos. Para ser mais interessante e prático de ser feito com ele, foram feitas duas alterações, em relação ao gráfico de dsipersão, feito anteriormente no começo desse guia: 1) o gráfico é feito avaliando à massa em relação à altura dos personagaens da franquia Star Wars, mas agora os pontos foram coloridos e diferenciados em função da `cor do olho` dos personagens; 2) para ser prático,  todo o script do ggplot foi atribuído ao objeto `Gráfico`, e então usado no função `ggplotly()`.
+
+## Tornando o gráfico interativo
+
+```{r}
+Inter.Graf<-ggplotly(Gráfico)
+Inter.Graf
+```
+
+Para poder salvar o gráfico com o formato interativo posteriormente, foi atribuido ao objeto `Inter.Graf`. À primeira vista, pode parecer não haver mudado nada, mas ao passar o mouse pelo gráfico, ou clicando em `zoom`, as diferenças parecem, como neste gráfico acima deste texto mesmo, ou através dp exemplo da imagem abaixo. Como é possível ver, ao passar o mouse por cima dos pontos, é possivel ver os dados do ponto, como a sua altura, a massa e a cor. Na segunda imagem, é possível ver a barra de ferramentas na posição superior Direita. Da esquerda para a direita, respectivamente: 
+
+*`download do gráfico como png`; 
+
+*`zoom`, puxando e arrastando, para dar zoom em uma área específica do gráfico; 
+
+* `movimentar e arrastar o gráfico`; `selecionar pontos específicos com contorno em caixa`; 
+
+* `selecionar pontos específicos com contorno livre`; 
+
+* `zoom in`, para se "aprofundar" no gráfico; 
+
+*`zoom out`, para se "distanciar" no gráfico; 
+
+* `autoescala`; 
+
+* `resetar área selecionada`; 
+
+* `mostar os dados de cada ponto por vez` e `mostrar todos os dados dos pontos selecionados`.
+
+## Salvando como gráfico interativo
+
+```{r}
+saveWidget(Inter.Graf,file ="G:/Meu Drive/R/Gráfico.html")
+```
+
+Com a função `saveWidget()`, do pacote `htmlwidget`, é possível salvar o gráfico, preservando ele na sua forma interativa. Para isso, é especificado o gráfico, que estava no objeto `Inter.Graf`, e o local do dispositivo onde o gráfico será salvo (`file ="G:/Meu Drive/R/"`) e o nome do arquivo, no formato html (`Gráfico.html`).
+
+![](G:/Meu Drive/R/G3.jpeg)
+
+Como é possível observar, o arquivo foi salvo no formato html e no local informado. É importante verificar se o arquivo está programado para ser aberto com o seu navegador, que neste caso aqui, é o `Microsft Edge`. Caso não, procure alterar nas configuras, em `propriedades`, do arquivo.
+
+![](G:/Meu Drive/R/G4.jpeg)
+
+E como pode ser visto, o arquivo foi aberto no Mirosoft Edge, preservando sua capacidade de ser interativo.
+
+# **Personalizando os temas do ggplot**
+
+## O que são os temas do ggplot
+
+Quando criamos um ggplot, ele automaticamente lhe cria um aparência para o plano de fundo, as grades, os nomes dos eixos, valores dos eixos, aparência do título, etc. Isso é o que se chama de `tema`. Esses temas são feitos através da função `theme()` e suas variações, como:
+
+* theme();
+
+* theme_bw();
+
+* theme_classic();
+
+* theme_dark();
+
+* theme_get();
+
+* theme_gray();
+
+* theme_grey();
+
+* theme_light();
+
+* theme_linedraw();
+
+* theme_minimal();
+
+* theme_replace();
+
+* theme_set();
+
+* theme_test();
+
+* theme_update();
+
+* theme_void()
+
+Algumas vezes, o tema padrão que o ggplot pode não influenciar na legidibilidade do gráficco, e em outras pode até ajudar. Contudo, há situações que os temas precisam ser alterados, por simples motivos estéticos, ou pelo tema padrão atrapalhar a legidibilidade ou até uma exigência de quem irá avaliar o trabalho. Como é possível personalizar os temas, é uma importante ferramenta para alterar os temas.
+
+## Criando um gráfico para ser modelo da personalização de temas
+
+Antes de começar a personalizar, é importante lembrar que não existem, necessariamente, `temas melhores` ou `temas piores`. Existem sim temas mais adequados para diversos fins e necessidades, mas com as possibilidades que serão expostas aqui, existem mais `5.500 possibilidades de temas personalizados`. Por isso, lembre-se que cada caso é um caso, e não encare um único tema como um "salvador universal".
+
+### Package exigidos
+
+```{r}
+library(tidyverse)
+library(grDevices)
+```
+
+Para começar a criar um gráfico a ser usado para os exemplos, são carregados os packages `ggplot2`, para criar os gráficos em ggplot, e `tidyverse`, mas conseguir trabalhar melhor com os dados. Em seguida, foi carregado o package `grDevices`, para manipular as fontes de texto dos gráficos.
+
+### Criando um gráfico exemplo
+
+```{r}
+Ecs<-economics
+Ecs
+```
+
+Para começar, foi carregado a base de dados `Economics`, e atribuída ao objeto `Ecs`. Essa base de dados é do package ggplot, que apresenta dados de séries econômicas da história dos Estados Unidos. Ela será usada para construir o gráfico ggplot que será testado as funções de personalização de tema.
+
+```{r}
+exemplo<-Ecs%>%
+  ggplot(aes(date,unemploy,color=pop))+
+  geom_line(size=1.1)+
+  labs(title="Nº de desempregados nos Estados Unidos",
+       subtitle=" entre 01/07/1967-01/04/2015", 
+       x="Data",
+       y="Desemprego",
+       color="tamanho populacional",
+       caption="dados: Economics")+
+  scale_color_gradientn(colours =c("purple4","royalblue","dodgerblue","deepskyblue","mediumspringgreen","springgreen","green","lawngreen","greenyellow","yellow", "gold","darkorange","chocolate1","orangered","red","darkred"),breaks=seq(0,325000,20000))
+exemplo
+```
+
+Criado o gráfico, é possível criar os temas personalizados.
+
+## Personalizando
+
+### Elemento `element_text()`
+
+Esse elemento de texto do gráffico, como títulos e legendas. É possível alterar tamanho, forma e cor. Os elementos devem sempre ser seguidos de `element_text()`. Dentre os diversos elementos de texto, estão:
+
+* ##### `text=`: personaliza todo e qualquer texto do gráfico, sendo tílos ou elementos da legenda;
+
+```{r}
+exemplo+
+  theme( text  = element_text(color="red"))
+```
+
+* `axis.text=`: personaliza todo e qualquer texto os eixos do gráfico;
+
+```{r}
+exemplo+
+  theme( axis.text  = element_text(color="red"))
+```
+
+* `axis.text.x=`: personaliza o texto do eixo X do gráfico;
+
+```{r}
+exemplo+
+  theme( axis.text.x  = element_text(color="red"))
+```
+
+* `axis.text.y=`: personaliza o texto do eixo Y do gráfico;
+
+```{r}
+exemplo+
+  theme( axis.text.y  = element_text(color="red"))
+```
+
+* `legend.text=`: personaliza o texto da legenda do gráfico;
+
+```{r}
+exemplo+
+  theme( legend.text  = element_text(color="red"))
+```
+
+* `title=`: personaliza apenas os títulos do gráfico;
+
+```{r}
+exemplo+
+  theme( title  = element_text(color="red"))
+```
+
+* `legend.title=`: personaliza o título da legenda;
+
+```{r}
+exemplo+
+  theme( legend.title  =  element_text(color="red"))
+```
+
+* `plot.title=`: personaliza o título do gráfico:
+
+```{r}
+exemplo+
+  theme( plot.title  =  element_text(color="red"))
+```
+
+* `plot.subtitle=`: personaliza o subtítulo do gráfico:
+
+```{r}
+exemplo+
+  theme( plot.subtitle  =  element_text(color="red"))
+```
+
+* `plot.caption=`: personaliza a nota de roda-pé do gráfico:
+
+```{r}
+exemplo+
+  theme( plot.caption  =  element_text(color="red"))
+```
+
+* `plot.tag=`: personaliza a marcação do gráfico:
+
+```{r}
+exemplo2<-Ecs%>%
+  ggplot(aes(date,unemploy,color=pop))+
+  geom_line(size=1.1)+
+  labs(title="Nº de desempregados nos Estados Unidos",
+       subtitle=" entre 01/07/1967-01/04/2015",
+       tag="o tamanho populacional só cresceu", 
+       x="Data",
+       y="Desemprego",
+       color="tamanho populacional",
+       caption="dados: Economics")+
+  scale_color_gradientn(colours =c("purple4","royalblue","dodgerblue","deepskyblue","mediumspringgreen","springgreen","green","lawngreen","greenyellow","yellow", "gold","darkorange","chocolate1","orangered","red","darkred"),breaks=seq(0,325000,20000))
+
+exemplo2+
+  theme( plot.tag  =  element_text(color="red"))
+```
+
+* `axis.title=`:personaliza os títulos dos eixos X e Y;
+
+```{r}
+exemplo+
+  theme( axis.title  = element_text(color="red"))
+```
+
+* `axis.title.x=`: personaliza apenas o título do eixo X;
+
+```{r}
+exemplo+
+  theme( axis.title.x  = element_text(color="red"))
+```
+
+* `axis.title.y=`: personaliza apenas o título do eixo Y.
+
+```{r}
+exemplo+
+  theme( axis.title.y =  element_text(color="red"))
+```
+
+* `Personalizando a fonte`:
+
+```{r}
+windowsFonts(TimesNewRoman=windowsFont("Times New Roman"),
+                        WideLatin=windowsFont("Wide Latin"),
+                        Mistral=windowsFont("Mistral"))
+
+exemplo+
+  theme(text=element_text(family = "TimesNewRoman"))
+
+exemplo+
+  theme(text=element_text(family = "WideLatin"))
+
+exemplo+
+  theme(text=element_text(family = "Mistral"))
+```
+
+Naturalmente, é o ggplot criar seus plots com textos na fonte Arial, mas também é possível alterar a fonte dos textos do plot. Para isso, é usado a função `Windownsfonts()`, do package `grDevices`, especificando uma fonte salva no sistema do dispositivo, e atribuindo a um objeto. Após feito, basta apenas usar o comando `family=` para o objeto criado, dentro do comando `text=element_text()`. 
+
+### Elemento `element_line()`
+
+Esse elemento de linhas do gráfico, como as linhas dos eixos e as grades. É possível alterar tamanho, forma e cor. Os elementos devem sempre ser seguidos de `element_line()`. Dentre os diversos elementos de texto, estão:
+
+* `axis.line=`: personaliza as linhas dos eixos X e Y;
+
+```{r}
+exemplo+
+  theme( axis.line  = element_line(color="red"))
+```
+
+* `axis.line.x=`: personaliza apenas a linha do eixo X;
+
+```{r}
+exemplo+
+  theme( axis.line.x  = element_line(color="red"))
+```
+
+* `axis.line.y=`: personaliza apenas a linha do eixo Y;
+
+```{r}
+exemplo+
+  theme( axis.line.y  = element_line(color="red"))
+```
+
+* `axis.ticks=`: personaliza as marcas dos valores dos eixos;
+
+```{r}
+exemplo+
+  theme( axis.ticks  = element_line(color="red"))
+```
+
+* `axis.ticks.x=`: personaliza as marcas dos valores do eixo X;
+
+```{r}
+exemplo+
+  theme( axis.ticks.x  = element_line(color="red"))
+```
+
+* `axis.ticks.y=`: personaliza as marcas dos valores do eixo Y;
+
+```{r}
+exemplo+
+  theme( axis.ticks.y  = element_line(color="red"))
+```
+
+* `panel.grid=`: personaliza as linhas de grade;
+
+```{r}
+exemplo+
+  theme( panel.grid  = element_line(color="red"))
+```
+
+* `panel.grid,major=`: personaliza as linhas de grade superiores;
+
+```{r}
+exemplo+
+  theme( panel.grid.major  = element_line(color="red"))
+```
+
+* `panel.grid,major.x=`: personaliza as linhas de grade superiores do eixo X;
+
+```{r}
+exemplo+
+  theme( panel.grid.major.x  = element_line(color="red"))
+```
+
+* `panel.grid.major.y=`: personaliza as linhas de grade superiores do eixo Y;
+
+```{r}
+exemplo+
+  theme( panel.grid.major.y  = element_line(color="red"))
+```
+
+* `panel.grid.minor=`: personaliza as linhas de grade inferiores;
+
+```{r}
+exemplo+
+  theme( panel.grid.minor  = element_line(color="red"))
+```
+
+* `panel.grid.minor.x=`: personaliza as linhas de grade inferiores do eixo X;
+
+```{r}
+exemplo+
+  theme( panel.grid.minor.x  = element_line(color="red"))
+```
+
+* `panel.grid.minor.y=`: personaliza as linhas de grade inferiores do eixo Y;
+
+```{r}
+exemplo+
+  theme( panel.grid.minor.y  = element_line(color="red"))
+```
+
+### Elemento `element_rect()`
+
+Esse elemento do retângulo do controno do gráfico. É possível alterar tamanho, forma e cor. Os elementos devem sempre ser seguidos de `element_rect()`. Dentre os diversos elementos de texto, estão:
+
+* `legend.background=`: personaliza o retângulo que forma-se em volta da legenda. Usando a função `fill=`, escolhendo uma cor, é possível colorir o preenchimento do retângulo;
+
+```{r}
+exemplo+
+  theme( legend.background  = element_rect(color="red",fill="green"))
+```
+
+* `legend.key=`: personaliza o retângulo que forma-se em volta de cada elemento da legenda. Nesse caso, foi usado um outro gráfico, usando a base de dadUsando a função `fill=`, escolhendo uma cor, é possível colorir o preenchimento do retângulo;
+
+```{r}
+SW<-starwars
+SW
+```
+
+```{r}
+exemplo3<-SW%>%
+  ggplot(aes(height,mass,color=eye_color))+
+  geom_line(size=1)+
+  labs(title="Relação altura em relação à massa dos personagens da franquia de Star Wars",
+       x="Altura",
+       y="Massa",
+       color="cor do olho")
+
+exemplo3+
+  theme( legend.key  = element_rect(color="red",fill="green"))
+```
+
+* `legend.box.background=`: personaliza o semi-retângulo que forma-se em volta de cada elemento da legenda;
+
+```{r}
+exemplo+
+  theme( legend.box.background  = element_rect(color="red"))
+```
+
+* `panel.background=`: personaliza o retângulo que forma-se em volta do gráfico. Com a função `fill=`, é possível colorir o interior do gráfico;
+
+```{r}
+exemplo+
+  theme( panel.background  = element_rect(color="red",fill="green"))
+```
+
+* `plot.background=`: personaliza o retângulo que forma-se em volta dde todo o plot. Com a função `fill=`, é possível colorir o interior do gráfico;
+
+```{r}
+exemplo+
+  theme( plot.background  = element_rect(color="red",fill="green",size=1.5))
+```
+
+### Elemento `element_blank()`
+
+Esse elemento elimina os demais elementos do gráfico, apagando-os. Os elementos, como `text=`, `line=` ou `react` devem sempre ser seguidos de `element_blank()`. Dentre os diversos elementos de texto, estão:
+
+* `text=`: apaga todos os elementos de texto do gráfico;
+
+```{r}
+exemplo+
+  theme( title  = element_blank())
+```
+
+* `elementos específicos do texto`: é possível também apagar um elemento de texto em específico, como o título da legenda, o título do eixo X ou os valores dos eixos, com os comandos para estes mesmos elementos específicos, ensinados antiormente
+
+```{r}
+exemplo+
+  theme( legend.title  = element_blank())
+```
+
+```{r}
+exemplo+
+  theme( axis.title.x = element_blank())
+```
+
+```{r}
+exemplo+
+  theme( axis.text = element_blank())
+```
+
+* `line=`: apaga todos os elementos de linha gráfico;
+
+```{r}
+exemplo+
+  theme( line  = element_blank())
+```
+
+* `elementos específicos de linha`: é possível também apagar um elemento de texto em específico, como as linhas dos valores do eixo X, as linhas dos valores do eixo Y ou as linha dos valores superiores dos eixos, com os comandos para estes mesmos elementos específicos, ensinados antiormente
+
+```{r}
+exemplo+
+  theme( axis.ticks.x  = element_blank())
+```
+
+```{r}
+exemplo+
+  theme( axis.ticks.y = element_blank())
+```
+
+```{r}
+exemplo+
+  theme(  panel.grid.major = element_blank())
+```
+
+* `react=`: apaga todos os retângulos;
+
+```{r}
+exemplo3+
+  theme( legend.key  = element_blank())
+```
+
+## Criando um tema
+
+Em muitas situações, é preciso reutilizar aquele mesmo tema, com aquele mesmo estilo para gráficos com finalidades semelhantes. Para evitar ter que escrever tudo de novo, é possível atribuir a configuração de uma tema a um objeto. Porém, antes de criar um novo e tema e atribuir à qualquer gráfico, certifique-se que `o gráfico é compatível com as configurações do tema criado`, a fim de evitar problemas de plotar.
+
+### Criando um objeto com a nova configuração do tema
+
+```{r}
+theme.new<-theme(  text = element_text(color="black",size=12),axis.text=element_text(color="black"),legend.title = element_text(color="black"),panel.grid=element_line(color="gray"),axis.line=element_line(color="black"),panel.background=element_rect(fill="white"),legend.background = element_rect(fill="white"),plot.background=element_rect(fill="#7494a5"))
+```
+
+Tendo criado agora o tema, é possível configurar o gráfico modelo com este tema.
+
+### Transformando o gráfico com o tema criado
+
+```{r}
+exemplo+
+  theme.new
+```
+
+Adicionando ao ggplot o objeto `theme.line`, é possível agora configurar o gráfico com o tema criado.
+
+# **Plotando mais de um gráfico ao mesmo tempo**
+
+## Quando usar
+
+Há siruações em que diferentes análises semelhantes são feitas. Exemplo é testando o crescimento populacional de 4 espécies num mesmo espaço de tempo. Para facilitar a interpretação e análise nestas situações, uma solução útil é pôr os gráficos todos juntos no mesmo campo de visão. Para isso, os gráficos são plotados de uma única vez.
+
+## Packages exigidos
+
+```{r}
+library(tidyverse)
+library(cowplot)
+```
+
+Foi carregado o package `ggplot2` para criar os gráficos, assim como para carregar as bases de dados que serão utilizadas. Em seguida, foi carregado o package `tidyverse`, para melhor trabalahr com os dados que serão utilizados. Por último, foi carregado o package `cowplot`, para poder ser plotado vários gráficos de uma vez.
+
+## Carregando a base de dados
+
+```{r}
+SW<-starwars
+SW
+```
+
+Para a criação dos dados, foi carregada abase dados `starwars`, do package `ggplot2`, que possui dados de alguns personagens da franquia Star Wars, e então atribuído ao objeto `SW`. 
+
+## Criando os gráficos
+
+```{r}
+G1<-SW %>% 
+  ggplot(aes(sex,height,fill=sex))+
+  geom_boxplot(color="black")+
+  labs(title = "altura dos personagens em função do sexo",
+       x="sexo",
+       y="altura",
+       fill="sexo")+
+  tema
+
+G1
+
+G2<-SW %>% 
+  ggplot(aes(gender,height,fill=gender))+
+  geom_boxplot(color="black")+
+  labs(title = "altura dos personagens em função do gênero",
+       x="gênero",
+       y="altura",
+       fill="gênero")+
+  tema
+
+G2
+
+G3<-SW %>% 
+  ggplot(aes(hair_color,height,fill=hair_color))+
+  geom_boxplot(color="black")+
+  labs(title = "altura dos personagens em função da cor de cabelo",
+       x="cor de cabelo",
+       y="altura",
+       fill="cor do cabelo")+
+  tema
+
+G3
+```
+
+Foram criados três gráficos, a aprtir da base de dado `SW`, e atribuídos aos objetos `G1`,`G2` e `G3`. Para poder plotar todos os gráficos juntos de uma vez, é preciso atribuir os gráficos à objetos.
+
+## Plotando os gráficos juntos de uma vez
+
+```{r}
+plot_grid(G1,G2,G3)
+```
+
+Através da função `plot_grid()` é possível plotar os 3 gráficos de uma vez, inserior os objetos dos gráficos, na ordem que deseja aparecerem.
+
+## Configurando
+
+### Nº de colunas
+
+```{r}
+plot_grid(G1,G2,G3,ncol=1)
+```
+
+Através do elemento `ncol=` é possível escolher o Nº de colunas. Se `ncol=1`, todos os gráficos ficarão em linhas diferentes, em que a quantidade de linhas será a quantidade de gráficos.
+
+### Nº de linhas
+
+```{r}
+plot_grid(G1,G2,G3,nrow=1)
+```
+
+Através do elemento `nrows=` é possível escolher o Nº de linhas. Se `nrows=1`, todos os gráficos ficarão em colunas diferentes, em que a quantidade de colunas será a quantidade de gráficos.
+
+## Utilizando `facet_wrap()`
+
+```{r}
+SW %>% 
+  mutate(`É humano?`=case_when(species=="Human"~"Humano",
+                               species!="Human"~"Não-Humano",
+                               species==NA~"Sem Identificação")) %>%
+  ggplot(aes(mass,height,fill=`É humano?`))+
+  geom_point(shape=21,color="black",size=4)+
+  labs(x="Massa",
+       y="Altura")+
+  facet_wrap(~`É humano?`)+
+  tema
+```
+
+A função `facet_wrap()` é do package `ggplot2`, e cria um plot dividido baseado em algum critério, alguma variável, da base de dados que está sendo utilizada na construção do ggplot. A grande vantagem do uso do `facet_wrap()` em relação ao `cowplot()` é que o `facet_wrap()` não depende que sejam criados objetos contendo os ggplots, mas sim que o critério de divisão esteja em alguma variável da base de dados. A única possível desvantagem do uso do `facet_wrap()` é que caso não exista a variável na base de dados, não será possível criar o gráfico particionado. Contudo, isso pode ser contornado com uma simples manipulação de dados: como existe uma qantidade muito grande de espécies na bse de dados `SW`, foi utilizada a função `mutate()`, para criar uma nova variável, em conjunto com a função `case_when()`, para criar uma seleção condicional, criando uma nova variável `É Humano?`, onde os personagens da espécie humana estariam como `Humano` e as outras espécies como `Não-Humano` ou `NA`.
+
+### Escolhendo o Nº de linhas e de colunas
+
+```{r}
+SW %>% 
+  mutate(`É humano?`=case_when(species=="Human"~"Humano",
+                               species!="Human"~"Não-Humano",
+                               species==NA~"Sem Identificação")) %>%
+  ggplot(aes(mass,height,fill=`É humano?`))+
+  geom_point(shape=21,color="black",size=4)+
+  labs(x="Massa",
+       y="Altura")+
+  facet_wrap(~`É humano?`,ncol=2)+
+  tema
+
+SW %>% 
+  mutate(`É humano?`=case_when(species=="Human"~"Humano",
+                               species!="Human"~"Não-Humano",
+                               species==NA~"Sem Identificação")) %>%
+  ggplot(aes(mass,height,fill=`É humano?`))+
+  geom_point(shape=21,color="black",size=4)+
+  labs(x="Massa",
+       y="Altura")+
+  facet_wrap(~`É humano?`,nrow=3)+
+  tema
+```
+
+Assim como no `cowplot()`, também é possível selecionar o nº de linhas e colunas desejadas no plot.
+
+### Alterando as escalas
+
+```{r}
+SW %>% 
+  mutate(`É humano?`=case_when(species=="Human"~"Humano",
+                               species!="Human"~"Não-Humano",
+                               species==NA~"Sem Identificação")) %>%
+  ggplot(aes(mass,height,fill=`É humano?`))+
+  geom_point(shape=21,color="black",size=4)+
+  labs(x="Massa",
+       y="Altura")+
+  facet_wrap(~`É humano?`,scale="free")+
+  tema
+
+SW %>% 
+  mutate(`É humano?`=case_when(species=="Human"~"Humano",
+                               species!="Human"~"Não-Humano",
+                               species==NA~"Sem Identificação")) %>%
+  ggplot(aes(mass,height,fill=`É humano?`))+
+  geom_point(shape=21,color="black",size=4)+
+  labs(x="Massa",
+       y="Altura")+
+  facet_wrap(~`É humano?`,scale="free_x")+
+  tema
+
+SW %>% 
+  mutate(`É humano?`=case_when(species=="Human"~"Humano",
+                               species!="Human"~"Não-Humano",
+                               species==NA~"Sem Identificação")) %>%
+  ggplot(aes(mass,height,fill=`É humano?`))+
+  geom_point(shape=21,color="black",size=4)+
+  labs(x="Massa",
+       y="Altura")+
+  facet_wrap(~`É humano?`,scale="free_y")+
+  tema
+```
+
+O padrão do `facet_wrap()` é de deixar uma escala padronizada para os dois eixos. Contudo, é possível observar nos ultimos plots que há espaços do gráfico sem a ocorrência de pontos. Isso acontece porque a padronização não leva em conta as diferenças nas escalas das distribuiçõe para os diferentes elementos da variável que divide os plots. É possível controlar essa escala com: 
+
+* `scale="free"`: para que as escalas de ambos os eixos estejam ajustadas para cada distribuição em particular;
+
+* `scale="free_x"`: para que a escala dos eixos X estejam ajustadas para cada distribuição em particular;
+
+* `scale="free_y"`: para que a escala dos eixos Y estejam ajustadas para cada distribuição em particular;
+
+### Usando mais de uma variável por vez
+
+```{r}
+SW %>% 
+  mutate(`É humano?`=case_when(species=="Human"~"Humano",
+                               species!="Human"~"Não-Humano",
+                               species==NA~"Sem Identificação")) %>%
+  ggplot(aes(mass,height,fill=`É humano?`))+
+  geom_point(shape=21,color="black",size=4)+
+  labs(x="Massa",
+       y="Altura")+
+  facet_wrap(~`É humano?`+gender)+
+  tema
+```
+
+Também é possível combinar variáveis, fazendo assim análises combinatória com diferentes variáveis.
+
+### Alterando a cor da caixa do `facet_wrap()`
+
+```{r}
+tema_facet<-theme(text=element_text(family="TimesNewRoman"),
+            title=element_text(color="black",size=15),
+            axis.text = element_text(color="black",size=10),
+            axis.title = element_text(color="black",size=10),
+            panel.grid=element_line(color="grey75",linetype = "dashed",size=.5),
+            axis.line=element_blank(),
+            plot.background=element_rect(fill="white",color="white"),
+            panel.background=element_rect(fill="white"),
+            panel.border = element_rect(colour = "black", fill = NA,size=0.59),
+            legend.key= element_rect(color="white",fill="white"),
+            strip.background = element_rect(colour="black",fill="#4B8899"))
+
+SW %>% 
+  mutate(`É humano?`=case_when(species=="Human"~"Humano",
+                               species!="Human"~"Não-Humano",
+                               species==NA~"Sem Identificação")) %>%
+  ggplot(aes(mass,height,fill=`É humano?`))+
+  geom_point(shape=21,color="black",size=4)+
+  labs(x="Massa",
+       y="Altura")+
+  facet_wrap(~`É humano?`)+
+  tema_facet
+```
+
+Outra coisa que é possível de ser feita com o `facet_wrap()` é mudando a cor de prrenchimento e contorno das caixas. Para isso, é utilizado o comando `strip.background=element_rect()` na função `theme()`.
+
+## Utilizando facet_grid()
+
+```{r}
+SW %>% 
+  mutate(`É humano?`=case_when(species=="Human"~"Humano",
+                               species!="Human"~"Não-Humano",
+                               species==NA~"Sem Identificação")) %>%
+  ggplot(aes(mass,height,fill=`É humano?`))+
+  geom_point(shape=21,color="black",size=4)+
+  labs(x="Massa",
+       y="Altura")+
+  facet_grid(gender~`É humano?`)+
+  tema
+```
+
+Enquanto que o `facet_wrap()` dividia baseado apenas em colunas, usando uma única variável ou um conjunto de variáveis, o `facet_grid()` também cria uma vombinação, mas baseado em formato de grade. Todas as propriedades anteriormente feitas no `facet_wrap()` são aplicáveis ao `facet_grid()`.
+
+# **Adicionando imagens ao ggplot**
+
+## Quando utilizar
+
+Em algumas situações, para melhor exemplificar aspectos de uma análise, ou apenas deixá-la mais didática, é muito utilizado a adição de imagens ao gráfico. Adição de imagens pode ser muito útil, como quando se deseja representar uma espécie, ou até apresentar as bandeiras de estados ou países.
+
+## Pacakges exigidos
+
+```{r}
+library(tidyverse)
+library(ggimage)
+```
+
+Foi carregado o package `ggplot2` para criar os gráficos. Em seguida, foi carregado o package `tidyverse`, para melhor trabalahr com os dados que serão utilizados. Por último, foi carregado o package `ggimage`, para poder adicionar imagens ao gráfico ggplot
+
+## Criando os dados
+
+```{r}
+n.spe1<-c(18,15,14,12,9,7,5)
+n.spe1
+n.spe2<-c(18,16,13,11,10,4,3)
+n.spe2
+red.hab1<-c(0.0,0.05,0.1,0.15,0.2,0.25,0.3)
+red.hab1
+red.hab2<-c(0.0,0.05,0.1,0.15,0.2,0.25,0.3)
+red.hab2
+```
+
+Primeiro, foram criados os objetos `n.spe1` e `n.spe2`, que descrevem o nº de indivíduos de duas espécies de serpentes do gênero *Crotalus* sp.. Após, foram criados os objetos `red.hab1` e `red.hab2`, que descrevem as porcentagens de redução de habitat em que as espécies foram coletadas.
+
+```{r}
+crotalus1<-data.frame(n.spe1,red.hab1)
+crotalus1
+crotalus2<-data.frame(n.spe2,red.hab2)
+crotalus2
+```
+
+Após terem sido criadas as variáveis referentes à cada espécie, foram criados os data frames para a base de dados de cada espécie, através da função `data.frame()`, e atribuídos aos objetos `crotalus1` e `crotalus2`.
+
+## Adicionando as imagens aos gráficos
+
+```{r}
+setwd("G:/Meu Drive/R")
+```
+
+Antes de seres adicionadas as imagens, é definido o diretório, o local de onde as imagens serão extraídas.
+
+```{r}
+g1<-crotalus1 %>% 
+  ggplot()+
+  geom_line(aes(red.hab1,n.spe1),color="black",size=1)+
+  geom_point(aes(red.hab1,n.spe1),color="black",fill="yellow",shape=21,size=4)+
+  scale_x_continuous(breaks=seq(0.0,0.30,0.05))+
+  scale_y_continuous(breaks=seq(0,18,2))+
+  labs(title=" ",
+       x="% da redução de habitat",
+       y="nº de indivíduos coletados")+
+  tema+
+  geom_image(aes(x=0.20,y=17,image = "crotalus1.png"),size=0.4)
+
+g1
+
+g2<-crotalus2 %>% 
+  ggplot()+
+  geom_line(aes(red.hab2,n.spe2),color="black",size=1)+
+  geom_point(aes(red.hab2,n.spe2),color="black",fill="yellow",shape=21,size=4)+
+  scale_x_continuous(breaks=seq(0.0,0.30,0.05))+
+  scale_y_continuous(breaks=seq(0,18,2))+
+  labs(title=" ",
+       x="% da redução de habitat",
+       y="nº de indivíduos coletados")+
+  tema+
+  geom_image(aes(x=0.20,y=17,image = "crotalus2.png"),size=0.4)
+
+g2
+```
+
+Após definido o diretório, são feitos os gráficos. Nesse caso, a especificação dos eixos, no comando `aes()`, não é feita no elemento `ggplot()`, mas sim no elemento `geom_line()` e no `geom_point()`, para que o comando consiga adicionar a imagem. Ou seja: a especificação dos eixos deve ocorrer nos mesmos locais que se define o tipo de gráfico a ser feito, na ondem de sobreposição em que se deseja fazer (nesse caso, pontos por cima das linhas. Para asdicionar a imagem, é usada a função `geom_image()`, do package `ggimage`, onde dentro do comando `aes()` da função é especificado:
+
+* x: posição da imagem pelo eixo X;
+
+* y: posição da imagem pelo eixo Y;
+
+* image: imagem a ser carregada, com "nome o arquivo.formato do arquivo".
+
+Fora do comando `aes()`, é especificado o tamanho da imagem, pelo argumento `size=`, onde é aconselhável que o tamanho da imagem esteja entre 0 e 1.
+
+## plotando os dois gráficos de uma vez
+
+Nestas situações, é muito útil ter os dois gráficos no campo de visão para serem comparados, como feito no tópico anterior do guia. Para isso, usa-se a função `plot_grid()`
+
+```{r}
+library(cowplot)
+plot_grid(g1,g2)
+```
+
+Carregando o package `cowplot`, e usando a sua função `plot_grid()`, é possível plot de uma única vez os dois plots.
+
+# **Cluster nos gráficos**
+
+## Quando utilizar
+
+Em gráficos de dispersão, por exemplo, é comum usar oo comando `aes(color=variável)`, ou alternativamente `aes(fill=variável)`, para diferenciar os pontos em relação à variáveis qualitativas no gráfico, como espécies, locais e comunidades diferentes, e vizualizar de formas melhores como aqueles diferenntes dados estão dispersos nos dados. Uma forma de facilitar essa vizualização é delimitar círculos ou elípses que representem os diferentes tipos de dados, criando clusters.
+
+## Packages exigidos
+
+```{r}
+library(ggforce)
+library(tidyverse)
+library(palmerpenguins)
+```
+
+Foi carregado o package `ggforce`, que é utilizado para criar estes clusters. Em seguida, foi carregado o package `tidyverse`, que carrega tanto o package `ggplot2` quanto outros utilizados para trabalhar com os dados. Por último, foi carregado o package `palmerpenguins`, para utilizar dados morfométricos sobre pinguins.
+
+## Carregando os dados
+
+```{r}
+pinguins<-penguins %>% 
+  drop_na()
+pinguins
+```
+
+Usando a própia base de dados `peguins`, do package `palmerpeguins`, atribuimos ela ao objeto `pinguins`. Explorando esta base de dados, podemos ver as seguintes variáveis:
+
+* `species`: as três espécies de pinguins estudadas (Adélie, Chinstrap e Gentoo);
+
+* `island`: as três ilhas estudadas (Biscoe, Dream ou Torgersen);
+
+* `bill_length_mm`: o número do comprimento do bico em mm;
+
+* `bill_depth_mm`: o número da profundidade do bico em mm;
+
+* `flipper_length_mm`: o número inteiro do comprimento da asa/nadadeira em mm;
+
+* `body_mass_g`: massa corporal em g;
+
+* `sex`: sexo dos pinguins;
+
+* `year`:  os anos do estudo (2007, 2008 e 2009).
+
+## Criango o plot
+
+```{r}
+pinguins %>% 
+  ggplot(aes(body_mass_g,bill_length_mm))+
+  geom_point(size=4)+
+  labs(title="Relação entre o tamanho do bico e a massa corporal",
+       subtitle="Espécies mais pesadas possuem maiores bicos?",
+       x="massa corporal (g)",
+       y="comprimento do bico (mm)")+
+  scale_x_continuous(breaks = seq(2500,7000,500))+
+  tema
+```
+
+Conseguimos ter uma noção de inferência básica de que espécimes mais pesados possuem maiores comprimento de bico. Mas como isso reflete-se nas espécies?
+
+## Discrimando os pontos por cores
+
+```{r}
+pinguins %>% 
+  ggplot(aes(body_mass_g,bill_length_mm,fill=species))+
+  geom_point(size=4,shape=21,color="black",alpha=0.65)+
+  labs(title="Relação entre o tamanho do bico e a massa corporal",
+       subtitle="O padrão observado anteriormente tem influência da espécie?",
+       x="massa corporal (g)",
+       y="comprimento do bico (mm)",
+       fill="Espécies")+
+  scale_x_continuous(breaks = seq(2500,7000,500))+
+  scale_fill_manual(values=c("#FFAA52","#52FF73","#8952FF"))+
+  tema
+```
+
+Dsicriminando os pontos em relação às espécies, é possível observar que existe sim uma inflência das espécies em relação aos dados observados. Agora, vamos delimitar os grupos utilizando clusters.
+
+## Criando os clusters
+
+### Círculos
+
+```{r}
+pinguins %>% 
+  ggplot(aes(body_mass_g,bill_length_mm,fill=species))+
+  geom_point(size=4,shape=21,color="black",alpha=0.65)+
+  labs(title="Relação entre o tamanho do bico e a massa corporal",
+       subtitle="O padrão observado anteriormente tem influência da espécie?",
+       x="massa corporal (g)",
+       y="comprimento do bico (mm)",
+       fill="Espécies",
+       color="Espécies")+
+  scale_x_continuous(breaks = seq(2500,7000,500))+
+  geom_mark_circle(aes(color=species))+
+  scale_fill_manual(values=c("#FFAA52","#52FF73","#8952FF"))+
+  tema
+```
+
+Com a função `geom_mark_circle()`, é possível criar círculos que delimitam os dados discriminados no comando `aes()`. Contudo, os cícrlos criam área que cobrem quase toda a área dos dados, e não dão muita noção de dispersão dos dados. Vamos tentar de outra forma
+
+### Elípses
+
+```{r}
+pinguins %>% 
+  ggplot(aes(body_mass_g,bill_length_mm,fill=species))+
+  geom_point(size=4,shape=21,color="black",alpha=0.65)+
+  labs(title="Relação entre o tamanho do bico e a massa corporal",
+       subtitle="O padrão observado anteriormente tem influência da espécie?",
+       x="massa corporal (g)",
+       y="comprimento do bico (mm)",
+       fill="Espécies",
+       color="Espécies")+
+  scale_x_continuous(breaks = seq(2500,7000,500))+
+  geom_mark_ellipse(aes(color=species))+
+  scale_fill_manual(values=c("#FFAA52","#52FF73","#8952FF"))+
+  tema
+```
+
+Com a função `geom_mark_ellipse()`, ao contrário de criar um círculo perfeito, este cria uma elípse, baseado na distribuição dos dados, não opucando tanto espaço, e dando melhor noção de distribuição. Aqui podemos observar que os dados tendem a se distribuir mais pela massa do que pelo comprimento do bico.
+
+### Quadrados 
+
+```{r}
+pinguins %>% 
+  ggplot(aes(body_mass_g,bill_length_mm,fill=species))+
+  geom_point(size=4,shape=21,color="black",alpha=0.65)+
+  labs(title="Relação entre o tamanho do bico e a massa corporal",
+       subtitle="O padrão observado anteriormente tem influência da espécie?",
+       x="massa corporal (g)",
+       y="comprimento do bico (mm)",
+       fill="Espécies",
+       color="Espécies")+
+  scale_x_continuous(breaks = seq(2500,7000,500))+
+  geom_mark_rect(aes(color=species))+
+  scale_fill_manual(values=c("#FFAA52","#52FF73","#8952FF"))+
+  tema
+```
+
+É um funcionamento semelhante ao cluster em círculos, mas com polígonos.
+
+### Forma não definida
+
+```{r}
+pinguins %>% 
+  ggplot(aes(body_mass_g,bill_length_mm,fill=species))+
+  geom_point(size=4,shape=21,color="black",alpha=0.65)+
+  labs(title="Relação entre o tamanho do bico e a massa corporal",
+       subtitle="O padrão observado anteriormente tem influência da espécie?",
+       x="massa corporal (g)",
+       y="comprimento do bico (mm)",
+       fill="Espécies",
+       color="Espécies")+
+  scale_x_continuous(breaks = seq(2500,7000,500))+
+  geom_mark_hull(aes(color=species))+
+  scale_fill_manual(values=c("#FFAA52","#52FF73","#8952FF"))+
+  tema
+```
+
+Este é o "menos elegante" de todos. Aqui não é criada uma forma geométrica específica, mas baseada na distribuição dos dados.
+
+## Utilizando polígonos
+
+```{r}
+clusterpolígonos<-pinguins %>% 
+  group_by(species) %>% 
+  slice(chull(body_mass_g,bill_length_mm))
+
+pinguins %>% 
+  ggplot(aes(body_mass_g,bill_length_mm,fill=species,color=species))+
+  geom_point(size=4,shape=21,color="black",alpha=0.65)+
+  geom_polygon(data=clusterpolígonos,alpha=0.35)+
+  labs(title="Relação entre o tamanho do bico e a massa corporal",
+       subtitle="O padrão observado anteriormente tem influência da espécie?",
+       x="massa corporal (g)",
+       y="comprimento do bico (mm)",
+       fill="Espécies",
+       color="Espécies")+
+  scale_x_continuous(breaks = seq(2500,7000,500))+
+  scale_fill_manual(values=c("#FFAA52","#52FF73","#8952FF"))+
+  tema
+```
+
+Para criar os clúster baseados em polígonos, foi usada a função `geom_polygon()`, onde antes é necessário calcular a área do polígono: foi usada a função `group_by()` com a variável `species`, para diferenciar em função das espécies, em seguida usando a função `slice*()`, com `chul()` junto, utilizando o eixo X e o eixo Y utilizado no gráfico, para indicar com base em que produzir os polígonos. Com o novo objeto criado, foram então feitos os polígonos. Nesse caso, o que é feito é criar um `mínimo polígono convexo`. A vantagem deste em relação aos demais é que, ao usar um mínimo polígono convexo, os clusters ocupam o menor espaço possível, o que é útil para tentar diferenciar os grupos dentro de uma dispersão, já que usar o menor espaço possível também evita confundir áreas de intersseção.
+
+# **Gráfico de Caminhada**
+
+## Quando usar
+
+Em algumas situações onde estão sendo trabalhado com dados espaciais de pontos em coordenadas específicas, busca-se entender a trajetória daqueles pontos num espaço geográfico. É uma abordagem muito utilizada ao trabalhar com objetos espaciais, como ruas, rios, trilhas ou o caminho percorrido por algum animal. A forma mais clara de vizualizar estes tipos de dados é através de um caminho, representado por uma linha. Contudo, por mais que a função `geom_line()` seja usada para criar linhas nos gráficos, esta não é a mais adequada, e sim, a função `geom_path()`.
+
+## Packages exigidos
+
+```{r}
+library(readxl)
+library(tidyverse)
+```
+
+Além do package `tidyverse`, que carregará não apenas o package `ggplot2` como também outros packages para trabalhar com os dados, foi carregado o package `readxl`, para poder carregar nossa base de dados.
+
+## Carregando a base de dados
+
+```{r}
+bdr<-read_xlsx("G:/Meu Drive/R/Base de dados rio.xlsx")
+bdr
+```
+
+Será utilizada uma base de dados que contém dados de coordenadas espaciais (`X` e `Y`) e dandos ambientais de trechos de um rio.
+
+## Porque não usar `geom_line()`
+
+```{r}
+bdr %>% 
+  ggplot(aes(X,Y))+
+  geom_line(size=1)+
+  labs(title = "Pontos do rio",
+       x="Longitude",
+       y="Latitude")+
+  tema
+```
+
+Como pode ser observado, não é formado um caminho em si, mas uma linha que cresce e sobe. Isso acontece pois o `geom_line()` forma uma linha linear: ela vai da esquerda para a direita. Como o objetivo é formar uma linha que se comporte como um caminho, que possa fazer curvas e desvios, o mais adequada é usar a função `geom_path()`.
+
+## Criando o gráfico
+
+```{r}
+bdr %>% 
+  ggplot(aes(X,Y,label=pontos))+
+  geom_path(size=1)+
+  geom_label(size=2.5)+
+  labs(title = "Pontos do rio",
+       x="Longitude",
+       y="Latitude")+
+  tema
+```
+
+Como observado acima, agora temos um caminho traçado. O próximo passo agora é customizar. Para isso, valos levantar as seguintes perguntas: como se comporta a elevação e a demanda biológica por oxigênio?
+
+## Plotando a elevação
+
+```{r}
+bdr %>% 
+  ggplot(aes(X,Y,color=ele,label=pontos))+
+  geom_path(size=1.5)+
+  geom_label(size=2.5,color="black")+
+  labs(title = "Pontos do rio",
+       x="Longitude",
+       y="Latitude",
+       color="elevação (m)")+
+    scale_color_gradientn(colours =c("purple4","royalblue","dodgerblue","deepskyblue","mediumspringgreen","springgreen","green","lawngreen","greenyellow","yellow", "gold","darkorange","chocolate1","orangered","red","darkred"))+
+  tema
+```
+
+Como é possível observar, o ponto 1 é o ponto com maior elevação do rio, e segue-se um gradiente até o último ponto.
+
+## Plotando elevação e a demanda biológica por exigênio
+
+```{r}
+bdr %>% 
+  ggplot(aes(X,Y,color=ele,label=pontos,fill=bod))+
+  geom_path(size=1.5)+
+  geom_label(size=2.5,color="black")+
+  labs(title = "Pontos do rio",
+       x="Longitude",
+       y="Latitude",
+       fill="BOD",
+       color="Elevação (m)")+
+  scale_fill_gradientn(colours=c("greenyellow","lawngreen","green","mediumspringgreen","dodgerblue","royalblue","purple4"),
+                       breaks=seq(1,17,2))+
+  scale_color_gradientn(colours=c("purple4","royalblue","dodgerblue","deepskyblue","mediumspringgreen","springgreen","green","lawngreen","greenyellow","yellow", "gold","darkorange","chocolate1","orangered","red","darkred"))+
+  tema
+```
+
+
+Ao contrário do que foi observado nos dados de elevação, não foi possível observar um gradiente sobre o a demanda biológica por exigênio (BOD) ao longo do rio, onde os pontos 23 e 25 apresentaram altas taxas de BOD em relação às demais.
+
+# **Gráfico de pontos "nervosos"**
+
+## Quando usar
+
+Uma desvantagem do uso de boxplots é que o boxplot não apresenta a distribuição dos pontos: os quartis apresenta apenas intervalos específicos. Em algumas situações, até não é aconselhável o uso de boxplots. Contudo, uma alternativa que tem se popularizado com o tempo é o uso de boxplots com pontos que representam dados.
+
+## Packages exigidos
+
+```{r}
+library(tidyverse)
+```
+
+Foi carregado o package `tidyverse`, que permite não só utilizar outros packages para o tratamento de dados quanto o uso do package `ggplot2`.
+
+## Carregando os dados
+
+```{r}
+Mpg<-mpg
+Mpg
+```
+
+Foi carregada a base de dados `mpg`, que armazena dados econômicos sobre 38 modelos de carros populares 1999-2008, e atribuído ao objeto `Mpg`. Essa e outras bases de dados, como a base de dados `star wars` está no sistema do package `ggplot2`
+
+## Criando gráfico boxplot+pontos
+
+```{r}
+Mpg %>% 
+  ggplot(aes(class,hwy))+
+  geom_boxplot(color="black")+
+  labs(title = "milhas/galão em relação à classe do carro",
+       x="classe",
+       y="mihas/galão",
+       fill="classe")+
+  tema
+```
+
+Para entender melhor como os dados se distribuem, usará agora pontos.
+
+```{r}
+Mpg %>% 
+  ggplot(aes(class,hwy,fill=class))+
+  geom_point(size=3,color="black",shape=21)+
+  geom_boxplot(color="black",fill=NA,size=0.643)+
+  labs(title = "milhas/galão em relação à classe do carro",
+       x="classe",
+       y="mihas/galão",
+       fill="classe")+
+  scale_fill_manual(values=c("chocolate1","gold","royalblue","firebrick","seagreen1","darkorchid1","limegreen"))+
+  tema
+```
+
+Para conseguirmos entender mais informações no gráfico.
+
+```{r}
+Mpg %>% 
+  ggplot(aes(class,hwy,fill=displ))+
+  geom_point(shape=21,color="black",size=3)+
+  geom_boxplot(fill=NA,color="black",size=0.643)+
+  labs(title = "milhas/galão em relação à classe do carro",
+       x="classe",
+       y="mihas/galão",
+       fill="cilidradas/motor(L)")+
+  scale_fill_gradientn(colours=c("purple4","royalblue","dodgerblue","deepskyblue","mediumspringgreen","springgreen","green","lawngreen","greenyellow","yellow", "gold","darkorange","chocolate1","orangered","red","darkred"),breaks=seq(1.6,7.0,0.9))+
+  tema
+```
+
+Dess forma, é mais visível observarr a distibuição dos dados que compõe o boxplot. Nesse exemplo, os pontos se comportam formando uma linha vertical. Alternativamente, é possível utilizar ontos distribuídos não em uma linha reta.
+
+## Criando o gráfico "nervoso"
+
+```{r}
+Mpg %>% 
+  ggplot(aes(class,hwy,fill=displ))+
+  geom_jitter(shape=21,color="black",size=3)+
+  geom_boxplot(fill=NA,color="black",size=0.643)+
+  labs(title = "milhas/galão em relação à classe do carro",
+       x="classe",
+       y="mihas/galão",
+       fill="cilidradas/motor(L)")+
+  scale_fill_gradientn(colours=c("purple4","royalblue","dodgerblue","deepskyblue","mediumspringgreen","springgreen","green","lawngreen","greenyellow","yellow", "gold","darkorange","chocolate1","orangered","red","darkred"),breaks=seq(1.6,7.0,0.9))+
+  tema
+```
+
+Usando o comando `geom_jitterr()`, ao invés de os pontos estarem distribuídos não como um linha reta, mas sim distribuídos como grupos também na horizontal. Importante ressaltar que a distribuição horizontal segue de forma aleatória, e cada novo plot, por mais que use os mesmos dados, trás uma nova distribuição.
+
+```{r}
+Mpg %>% 
+  ggplot(aes(class,hwy,fill=displ))+
+  geom_jitter(shape=21,color="black",size=3)+
+  geom_boxplot(fill=NA,color="black",size=0.643)+
+  labs(title = "milhas/galão em relação à classe do carro",
+       x="classe",
+       y="mihas/galão",
+       fill="cilidradas/motor(L)")+
+  scale_fill_gradientn(colours=c("purple4","royalblue","dodgerblue","deepskyblue","mediumspringgreen","springgreen","green","lawngreen","greenyellow","yellow", "gold","darkorange","chocolate1","orangered","red","darkred"),breaks=seq(1.6,7.0,0.9))+
+  tema
+```
+
+Como foi possível observar, uma nova distribuição. Uma possível desvantagem desse uso é que, pelos pontos também possuírem uma distribuição horizontal, é possível haja problemas de interpretações quanto às distribuições horizontais.
+
+# **Gráfico Violino**
+
+## Quando usar
+
+É muito comum ao usar boxplots perder um pouco da noção sobre o quanto de dados cada intervalo possui. Os boxplots são úteis para sintetizar a distribuição dos dados de uma variável, mas não permite informar em que ponto daquela variável houve maior cinjunto de dados. Esse tipo de informação é útil quando deseja-se entender em que ponto uma variável apresentou mais observações.
+
+## Packages exigidos
+
+```{r}
+library(tidyverse)
+```
+
+Foi carregado o package tidyverse, que permite não só utilizar outros packages para o tratamento de dados quanto o uso do package ggplot2.
+
+## Criando um gráfico como exemplo
+
+```{r}
+Iris<-iris
+
+Iris
+```
+
+Foi carregada a bse de dados `iris`, que descreve o comprimento e a largura das pétalas e das sépalas de 3 espécies de plantas do gênero *Iris* sp (*I. setosa*, *I. versicolor* e *I. virginica*) (Fisher, R. A. (1936) The use of multiple measurements in taxonomic problems. Annals of Eugenics, 7, Part II, 179–188, The data were collected by Anderson, Edgar (1935). The irises of the Gaspe Peninsula, Bulletin of the American Iris Society, 59, 2–5), e atribuído ao objeto `iris`. Essa base de dados é nativa do próprio sistema do R, então não é necessário baixá-la por fora nem instalar nenhum package para utiliza-la.
+
+## Gráfico de violino
+
+```{r}
+Iris %>% 
+  ggplot(aes(Species,Sepal.Length,fill=Species))+
+  geom_violin(color="black",aes(fill=Species))+
+  labs(x="espécies",
+       y="comprimento da sépala",
+       fill="espécies")+
+  scale_fill_manual(values=c("#FFAA52","#52FF73","#8952FF"))+
+  tema
+```
+
+Como foi possível observar, as 3 espécies possuem um padrão os dados possuem uma gaussiana: os valores do comprimento mais frequente para as 3 espécies foram valores médios. Também foi possível observar que a espécie *I. setosa* mais valores de comprimento mínimo da sépala em relação ao comprimento máximo observado, equanto que foi observado o oposto na espécie *I. virginica*.
+
+## Utilizando em conjunto com boxplot
+
+```{r}
+Iris %>% 
+  ggplot(aes(Species,Sepal.Length,fill=Species))+
+  geom_violin(color="black",aes(fill=Species))+
+  geom_boxplot(color="black",alpha=0)+
+  labs(x="espécies",
+       y="comprimento da sépala",
+       fill="espécies")+
+  scale_fill_manual(values=c("#FFAA52","#52FF73","#8952FF"))+
+  tema
+```
+
+Foi criado um gráfico de boxplot em conjunto com o gráfico de violino, para somar as propriedades dos dois tipos de gráficos.
+
+## Utilizando em conjunto gráfico "nervoso"
+
+```{r}
+Iris %>% 
+  ggplot(aes(Species,Sepal.Length,fill=Species))+
+  geom_violin(color="black",aes(fill=Species))+
+  geom_boxplot(color="black",alpha=0)+
+  geom_jitter(color="black",aes(fill=Species),size=4,shape=21,alpha=0.55)+
+  labs(x="espécies",
+       y="comprimento da sépala",
+       fill="espécies")+
+  scale_fill_manual(values=c("#FFAA52","#52FF73","#8952FF"))+
+  tema
+```
+
+Outra forma de apresentar os dados é utilizando a função `geom_jiter()`. Como o `geom_violin()` e o `geom_jiter()`, na prátrica, apresentam a mesma coisa (distribuição e concentração dos dados ao longo de uma distribuição), é uma escolha interessante unir as duas funções. A vantagem do `geom_violin()` é que ele resolve um problema do `geom_jiter()`: enquanto que a distribuição horizontal aleatória dos pontos do `geom_jiter()` pode comprometer a interpretação, o `geom_violin()`consegue representar a mesma coisa, mas sem comprometer a interpretação.
+
+# **Mapas**
+
+## Quando utilizar
+
+Nos últimos anos, o R ganhou notoriedade no quesito análises de dados espaciais, e isso faz com que o desenvolvimento da visualização destes dados também tenham ganhado notoriedade, principalmente o `ggplot`.
+
+## Packages exigidos
+
+```{r}
+library(tidyverse)
+
+library(elevatr)
+
+library(geodata)
+
+library(geobr)
+
+library(sf)
+
+library(sp)
+
+library(raster)
+
+library(ggspatial)
+```
+
+Foi carregado o pacote o package `tidyverse` para o tratamento dos dados e para usar a função `ggplot()`, o package `geodata` foi carregado para extrair variáveis bioclimáticas da base de dados online [`WorldClim`](https://www.worldclim.org/data/index.html) e o package `elevatr` foi carregado para extrair dados de altitude, o package `geobr` foi carregado para extrair dados vetoriais do Brasil, os packages `sf`, `sp` e `raster` foram carregados para carregar e trabalhar com dados vetorais e matriciais, e o package `ggspatial` foi carregado para adicionar elementos aos mapas.
+
+## Carregando dados
+
+### Dados vetoriais
+
+Dados vetoriais são polígonos, shapefiles, criados para demarcar uma área, baseado em coordenadas. Normalmente, estão no fromato .shp. A função `read_sf()`, do package `sf`, bastando apenas indicar o caminho do dispositivo. Por exemplo:
+
+```{r}
+BR<-read_sf("G:/Meu Drive/QGIS/BR_Pais_2021.shp")
+
+BR %>% plot
+```
+
+Arquivos .shp podem contar mais de uma propriedade dentro desses, como as variáveis de um dataset. Contudo, para facilitar, será utilizada o package `geobr`, onde a função `read_country()` carrega o shapefile Do Brasil, a função `read_state()` os estados e a função `read_municipality()` os municípios, onde foi filtrado apenas para Recife.
+
+```{r}
+Brasil<-read_country()
+
+Estados<-read_state()
+
+Recife<-read_municipality() %>% 
+  filter(name_muni=="Recife")
+```
+
+### Dados matriciais
+
+Já os dados matriciais, os raters, são dados que mostram diferentes valores em diferentes pontos, através de pixelagem. Eles são utilizados para gradientes em áreas espaciais, como em mapas de altitude, normalmente no formato .tif.
+
+```{r}
+topo_catimbau<-raster("G:/Meu Drive/QGIS/Topografia Catimbau.tif")
+
+topo_catimbau %>% plot
+```
+
+Assim como com os shapefiles, é possível carregar rasters do dispositivo, através da função `raster()`, do package `raster`. Para facilitar, serão carregadas bases de dados do site [`WorldClim`](https://www.worldclim.org/data/index.html), através do função `worldclim_country()`, do package `geodata`, e dados de elevação, através do package `elevatr`.
+
+São 19 variáveis bioclimáticas do WorldClim, sendo estas:
+
+* `BIO1`= Temperatura Média Anual;
+
+* `BIO2` = Intervalo Diurno Médio (Média do mês (temperatura máxima - temperatura mín.));
+
+* `BIO3` = Isotermalidade (BIO2/BIO7) (×100); 
+
+* `BIO4` = Sazonalidade da Temperatura (desvio padrão ×100);
+
+* `BIO5` = Temperatura máxima do mês mais quente;
+
+* `BIO6` = Temperatura mínima do mês mais frio; 
+
+* `BIO7` = Faixa Anual de Temperatura (BIO5-BIO6); 
+
+* `BIO8` = Temperatura média do trimestre mais úmido; 
+
+* `BIO9` = Temperatura média do trimestre mais seco;
+
+* `BIO10` = Temperatura Média do Trimestre Mais Quente; 
+
+* `BIO11` = Temperatura média do trimestre mais frio; 
+
+* `BIO12` = Precipitação Anual; 
+
+* `BIO13` = Precipitação do mês mais úmido; 
+
+* `BIO14` = Precipitação do Mês Mais Seco;
+
+* `BIO15` = Sazonalidade de Precipitação (Coeficiente de Variação);
+
+* `BIO16` = Precipitação do trimestre mais úmido;
+
+* `BIO17` = Precipitação do trimestre mais seco;
+
+* `BIO18` = Precipitação do Quarto Mais Quente;
+
+* `BIO19` = Precipitação do trimestre mais frio;
+
+Ao escolher a variável `bio`, no comando `var=bio`, escolhe-se as variáveis bioclimáticas, mas outras variáveis, como:
+
+* `tmin`;
+
+* `tmax`;
+
+* `tavg`;
+
+* `prec`;
+
+* `bio`
+
+```{r}
+Br_elev<-get_elev_raster(locations=Brasil, z=7, clip="locations")
+```
+
+

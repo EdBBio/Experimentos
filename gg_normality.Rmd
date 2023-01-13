@@ -1,0 +1,111 @@
+---
+title: "gg_normality"
+author: "Edson Nilton de Moura SIlva Júnior"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::downcute:
+    self_contained: true
+    thumbnails: FALSE
+    lightbox: true
+    gallery: true
+    highlight: tango
+---
+
+```{r setup, include=FALSE, message = FALSE, warning = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Pacotes
+
+```{r}
+library(tidyverse) # Pacote criar o ggplot e fazer o tratamento dos dados
+```
+
+# Datasets
+
+```{r}
+data("starwars") # Carregando o dataset Starwars
+
+head(starwars) # Visualizando o dataset Starwars
+
+data("iris") # Carregando o dataset Iris
+
+head(iris) # Visualizando o dataset Iris
+```
+
+# Função
+
+## Criando a função
+
+```{r}
+gg_normality <- function(data) {
+  
+  if(require("tidyverse") == FALSE){ # Caso quem usar a função não estiver com o Tidyverse instalado, a função instalará e o ativará
+    install.packages("tidyverse")
+    library(tidyverse)
+  } else { # Caso quem usar a função já estiver com o Tidyverse instalado, a função apenas o carregará
+    library(tidyverse)
+  }
+  
+  shapiro <- shapiro.test(data) # Fazendo o teste de Shapiro-Wilki para o vetor selecionado na função
+  
+  w <- shapiro[[1]] # Extraindo o valor da estaística W do teste
+  
+  w <- str_remove(w, "W") # Removendo o String "W", apenas ficando o número  da estatística
+  
+  p <- shapiro[[2]] # Extraindo o valor de P do teste
+  
+  data %>% # Carregando o dataset base do ggplot
+    as.data.frame %>% # Transformando em dataframe
+    ggplot(aes(sample = data))+ # Usando o comando sample = nos dados selcionados na função
+    stat_qq(shape = 21, # Pontos dos quantis
+          color = "darkred",
+          fill = "orange",
+          size = 4.5)+
+    stat_qq_line(color = "darkblue", # Linha dos Quantis
+                 size = 0.75)+
+    labs(subtitle = str_glue("W = ", {w}, ", p = ", {p}))+ # Usando a função str_glue() no subtítulo para adicionar a estatística W e o valor de P
+    theme(title = element_text(color = "black", 
+                               size = 10), # Tema do Gráfico
+          axis.text = element_text(color = "black", 
+                                   size = 10),
+          plot.subtitle = element_text(color = "black", 
+                                       size = 10),
+          axis.title = element_text(color = "black", 
+                                    size = 10),
+          panel.grid = element_line(color = "grey75", 
+                                    linetype = "dashed", 
+                                    size = 0.7),
+          panel.grid.minor = element_line(color = "grey75", 
+                                          linetype = "dashed", 
+                                          size = 0.7),
+          axis.line = element_blank(),
+          plot.background = element_rect(fill = "white", 
+                                         color = "white"),
+          panel.background = element_rect(fill ="white"),
+          panel.border = element_rect(colour = "black", 
+                                      fill = NA, 
+                                      size = 0.5),
+          legend.key = element_rect(color = "white", 
+                                    fill = "white"))
+}
+```
+
+## Aplicando a função
+
+```{r, message = FALSE, warning = FALSE}
+# Dataset Starwars
+
+for(i in starwars %>% select_if(is.numeric)){
+  print(gg_normality(data = i %>% as.numeric))
+}
+
+# Dataset Iris
+
+for(i in iris %>% select_if(is.numeric)){
+  print(gg_normality(data = i %>% as.numeric))
+}
+```
+
+
+

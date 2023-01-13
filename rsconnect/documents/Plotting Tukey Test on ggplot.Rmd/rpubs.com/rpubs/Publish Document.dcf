@@ -1,0 +1,11 @@
+name: Publish Document
+title:
+username:
+account: rpubs
+server: rpubs.com
+hostUrl: rpubs.com
+appId: https://api.rpubs.com/api/v1/document/885399/7c0f6e42b31f439b9d6c3e49982e8ac1
+bundleId: https://api.rpubs.com/api/v1/document/885399/7c0f6e42b31f439b9d6c3e49982e8ac1
+url: http://rpubs.com/Edbbio/885399
+when: 1660045234.77016
+lastSyncTime: 1660045234.77018

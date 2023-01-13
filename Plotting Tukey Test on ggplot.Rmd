@@ -1,0 +1,343 @@
+---
+title: "Plotting Tukey Test on ggplot"
+author: "Edson Nilton de Moura Silva Júnior"
+date: "19/03/2022"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float:
+      collapsed: true
+      smooth_scroll: true
+    
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+![](G:/Meu Drive/R/PerfilRPUBS.jpeg)
+
+# **Introduction**
+
+##### Tukey Pos-Hoc Test is an statistical test to avaliate which elements of a ANOVA (**An**alysis **o**f **Va**riation) analysis had variate between themself. As another analysis, Tukey Pos-Hoc Test can be plotted on graphics. On R Programing language, Tukey Pos-Hoc Test can be easily plotted with the **plot()** function.
+
+## Plotting with **plot()**
+
+```{r}
+sp1<-c(22,34,26,24,30)
+sp2<-c(35,43,44,29,38)
+sp3<-c(45,54,39,55,49)
+sp4<-c(33,35,36,37,42)
+dados<-data.frame(sp1,sp2,sp3,sp4)
+dat<-stack(dados)
+anova = aov(dat$values~dat$ind)
+tk_teste <- TukeyHSD(anova)
+plot(tk_teste, col="black", cex.axis=0.75)
+```
+
+##### As it can be understood, the bars that do not cruse the vertical line means a variation between two elements. In our situation, sp1-sp2 element means a variation between sp1 and sp2 groups. Although, it is a limitated plot graphic, in some situations. To resolute that, i created a function to make a ggplot plot Tukey Pos-Hoc Test.
+
+# **Getting data**
+
+## Loading the data
+
+##### To make our analysis, we loading a databse of four landsites, which one containing data about the herpetofauna species diversity on number of species per landsites, assigning to a database called **testeanv**.
+
+```{r}
+setwd("G:/Meu Drive/R")
+library(readxl)
+testeanv<-read_xlsx("testeanova.exemplo.xlsx")
+testeanv
+```
+
+## R required database formate
+
+##### To make the ANOVA analysis on R, it is necessary to formate the database in one way: a single colune with all the data of herpetofauna species diversity and an another single colune with the all landsites, corresponding with the previous rows data, as we can see above on the loaded database. To optimaze our analysis, it is necessary to certify if our data are on the R required database formate to do an ANOVA analysis.
+
+# **Doing the analysis**
+
+## ANOVA test
+
+##### Our first step here is to make an ANOVA analysis with the **testeanv** database, therefore creating a aov objet.
+
+```{r}
+ANOVA<-aov(testeanv$Valores~testeanv$Locais)
+summary(ANOVA)
+```
+
+##### It was did an ANOVA analysis, with the command **aov()**, assigning it to a objet called **ANOVA**. Next step, we used the **summary()** command on **ANOVA** objet. That result had show us: p=0.000149. It means the groups variate themself, so it is available to proceed to the Tukey Pos-Hoc Test.
+
+## Tukey test
+
+##### With a **ANOVA** object, it can do a the Tukey Pos-Hoc Test, using **TukeyHSD()** command, assigning to an objetc called **TUKEY**.
+
+```{r}
+TUKEY<-TukeyHSD(ANOVA)
+TUKEY
+```
+
+##### The Tukey test results showd sites 3-1, sites 3-2 and sites 4-3 differ significatilly themself. Then, we do the ggplot Tukey Pos-Hoc Test plotting.
+
+# **Created function**
+
+## Creating the function
+
+```{r}
+GGTukey<-function(Tukey){
+  A<-require("tidyverse")
+  if(A==TRUE){
+    library(tidyverse)
+  } else {
+    install.packages("tidyverse")
+    library(tidyverse)
+  }
+  B<-as.data.frame(Tukey[1])
+  colnames(B)[2:3]<-c("min",
+                      "max")
+  C<-data.frame(id=row.names(B),
+                min=B$min,
+                max=B$max)
+  D<-C%>%
+    ggplot(aes(id))+
+    geom_errorbar(aes(ymin=min,
+                     ymax=max),
+                 width = 0.2)+
+    geom_hline(yintercept=0,
+               color="red")+
+    labs(x=NULL)+
+    coord_flip()+
+    theme(text=element_text(family="TimesNewRoman"),
+            title=element_text(color="black",size=15),
+            axis.text = element_text(color="black",size=10),
+            axis.title = element_text(color="black",size=10),
+            panel.grid=element_line(color="grey75"),
+            axis.line=element_blank(),
+            plot.background=element_rect(fill="white",color="white"),
+            panel.background=element_rect(fill="white"),
+            panel.border = element_rect(colour = "black", fill = NA,size=0.59),
+            legend.key= element_rect(color="white",fill="white")
+          )
+  return(D)
+}
+```
+
+## Understandding the function and their elements
+
+### Starting the 1st commands and check the required packages
+
+##### To make that function, it was used the **function(){}** command, when the tukey objetc was the condicional object. In that command, to create a ggplot plotting and get manipulatting the data, we get the package called **tidyverse**: it load packages, like the **dplyr** and **ggplot2** packages, used to make our plots and get manipulatting our data. One possible problema would be a no dowloaded-tidyverse decive. To resolve that situation, it was:
+
+1. ##### Used the **require()** command. The **require()** ckeck out the downloaded used RStudio to average if an object is existent or package had been downloaded. If the command average the condicional is **true**, it will print an **TRUE** message. Then, that command had been assigninged to an **A** object.
+
+2. ##### Using the created **A** object, it was creat the condicional commands **if(){}** and **else{}**. If the **A** objet value equals to a **TRUE** print message, the RStudio only will load the **Tidyverse** package, as can be realised in the **if(){}** condicional command. But if the the **A** objet value equals to a **FALSE** print message, the RStudio will start to install the **tidyverse** package, to after load that package.
+
+##### That commands were created to work with two possible dinstictic situations:
+
+1. ##### The user had previously downloaded the **tidyverse** package, when it was necessary only load the package;
+
+2. ##### The user do not had previously downloaded the **tidyverse** package, when it was necessary firs install it, to posteriorly load that package.
+
+### Creating the required data frames
+
+##### Our next step is to change the Tukey object in a passively dataframe one, to make a ggplot plot. To do this, the only column of the Tukey object, containg the required data, was changed into a data frame object, with the **as.data.frame()** command, and assigning to the **B** object. The **B** object had been created, to padronize our plots, it was used the **colnames()** command, assigning to the 2nd to the 3rt column the names **lwr** and **upr**, respectivelly. 
+
+##### So, the 1st data frame object was created. Our next step is to make a 2nd data frame object. The 2nd data frame object will be the one who makes the ggplot plots. To make that 2nd data frame, we use the **data.frame()** command, using the 1st data frame data, following the steps:
+
+1. ##### Creating a identify column: that column will be used to show how analysis are been represeted by the lines, across the axis id. To make it, it was used the **row.names()** command, using **B** object, our 1st data frame, transforming it into a new data frame column, called **id**.
+
+2. ##### Creating a minimal values columns: that column will be used to the minimal plot lines values. To make it, it was assigned the **lwr** column **B** data frame to a new column, called **min**.
+
+3. ##### Creatung a maximal values columns: that column will be used to the maximal plot lines values. To make it, it was assigned the **upr** column **B** data frame to a new column, called **max**.
+
+##### All of them was used to creat, with the **data.frame()** command, our 2nd data frame. called **C**. That new data frame object will be used to creat the ggplot plot.
+
+### Making the ggplot plot command
+
+##### Using the data frame called **C**, containg the require data, we used the **ggplot()** command, using the column **id** on **aes()** ggplot function. To creat the lines, it is used the **geom_errorbar()** ggplot command, with **min** column values being the Y minnimal limits and **max** column values being the X maximal limits. After that, using the **geom_hline()** ggplot command to creat a red line interceptting the 0 Y axis value, matching who variation is significant (p<0.05). To finish the main plot layer, is used the **coord_flip()** ggplot command, to reverse the plot axis. The final ggplot command is the **theme()**, setting the aestthetical plot layer. The **ggplot()** command was assigning to a object called **D**.
+
+### Finishing the condictional function command
+
+##### To finish the function, was used a **return()** command, to the **D** object. That command do the function, after made, return all the coded command in this function. The function is made.
+
+# **Ggplot tukey test plotting**
+
+## Creating a ggplot tukey test plotting
+
+```{r}
+GGTukey(TUKEY)
+```
+
+# **Differing by color**
+
+##### Another way to make that ggplot graphic is differing the elements into **significant** and **not significant** by colors, insted using a vertical line crusing the 0 X axis value. That configuration allows identify the significant variantions using visual signals, being more easily interpretabel. 
+
+## Making the function
+
+```{r}
+GGTukey.2<-function(Tukey){
+  A<-require("tidyverse")
+  if(A==TRUE){
+    library(tidyverse)
+  } else {
+    install.packages("tidyverse")
+    library(tidyverse)
+  }
+  B<-as.data.frame(Tukey[1])
+  colnames(B)[2:4]<-c("min",
+                      "max",
+                      "p")
+  C<-data.frame(id=row.names(B),
+                min=B$min,
+                max=B$max,
+                idt=ifelse(B$p<0.05,
+                           "significant",
+                           "not significant")
+                )
+  D<-C%>%
+    ggplot(aes(id,color=idt))+
+    geom_errorbar(aes(ymin=min,
+                      ymax=max),
+                  width = 0.5,
+                  size=1.25)+
+    labs(x=NULL,
+         color=NULL)+
+    scale_color_manual(values=c("red",
+                                "green")
+                       )+
+    coord_flip()+
+    theme(text=element_text(family="TimesNewRoman"),
+            title=element_text(color="black",size=15),
+            axis.text = element_text(color="black",size=10),
+            axis.title = element_text(color="black",size=10),
+            panel.grid=element_line(color="grey75"),
+            axis.line=element_blank(),
+            plot.background=element_rect(fill="white",color="white"),
+            panel.background=element_rect(fill="white"),
+            panel.border = element_rect(colour = "black", fill = NA,size=0.59),
+            legend.key= element_rect(color="white",fill="white")
+          )
+  return(D)
+}
+```
+
+##### In that script, the only four difference is:
+
+1. ##### name the fourth colunm on the **B** data frame object.
+
+2. ##### creat a new colunm in the **C** data frame, named **idt**.
+
+3. ##### in **aes()** command, was assigned color=idt.
+
+4. ##### to define the color by the significant or not significant elements, based on p-value, using **scale_color_manual()** command.
+
+## Creating a ggplot tukey test plotting
+
+```{r}
+GGTukey.2(TUKEY)
+```
+
+# **Using the both ways**
+
+## Making the function
+
+```{r}
+GGTukey.3<-function(Tukey, Style){
+  GT<-function(Tukey){
+    A<-require("tidyverse")
+    if(A==TRUE){
+      library(tidyverse)
+    } else {
+      install.packages("tidyverse")
+      library(tidyverse)
+    }
+    B<-as.data.frame(Tukey[1])
+    colnames(B)[2:3]<-c("min",
+                        "max")
+    C<-data.frame(id=row.names(B),
+                  min=B$min,
+                  max=B$max)
+    D<-C%>%
+      ggplot(aes(id))+
+      geom_errorbar(aes(ymin=min,
+                        ymax=max),
+                    width = 0.2)+
+      geom_hline(yintercept=0,
+                 color="red")+
+      labs(x=NULL)+
+      coord_flip()+
+      theme(text=element_text(family="TimesNewRoman"),
+            title=element_text(color="black",size=15),
+            axis.text = element_text(color="black",size=10),
+            axis.title = element_text(color="black",size=10),
+            panel.grid=element_line(color="grey75"),
+            axis.line=element_blank(),
+            plot.background=element_rect(fill="white",color="white"),
+            panel.background=element_rect(fill="white"),
+            panel.border = element_rect(colour = "black", fill = NA,size=0.59),
+            legend.key= element_rect(color="white",fill="white")
+            )
+    return(D)
+  }
+  GT2<-function(Tukey){
+    A<-require("tidyverse")
+    if(A==TRUE){
+      library(tidyverse)
+    } else {
+      install.packages("tidyverse")
+      library(tidyverse)
+    }
+    B<-as.data.frame(Tukey[1])
+    colnames(B)[2:4]<-c("min",
+                        "max",
+                        "p")
+    C<-data.frame(id=row.names(B),
+                  min=B$min,
+                  max=B$max,
+                  idt=ifelse(B$p<0.05,
+                             "significant",
+                             "not significant")
+    )
+    D<-C%>%
+      ggplot(aes(id,color=idt))+
+      geom_errorbar(aes(ymin=min,
+                        ymax=max),
+                    width = 0.5,
+                    size=1.25)+
+      labs(x=NULL,
+           color=NULL)+
+      scale_color_manual(values=c("red",
+                                  "green")
+      )+
+      coord_flip()+
+      theme(text=element_text(family="TimesNewRoman"),
+            title=element_text(color="black",size=15),
+            axis.text = element_text(color="black",size=10),
+            axis.title = element_text(color="black",size=10),
+            panel.grid=element_line(color="grey75"),
+            axis.line=element_blank(),
+            plot.background=element_rect(fill="white",color="white"),
+            panel.background=element_rect(fill="white"),
+            panel.border = element_rect(colour = "black", fill = NA,size=0.59),
+            legend.key= element_rect(color="white",fill="white")
+            )
+    return(D)
+  }
+  GR<-if(Style==1){
+    return(GT(Tukey))
+  } else if(Style==2){
+    return(GT2(Tukey))
+  }
+  return(GR)
+}
+```
+
+##### In this script combining the previously both functions. To chose which plot aesthectic, more than TukeyHSD object, was created a variable named **Style**. To make the algoritimical process, it was used the **if()** and **else if()** condictional command, in which **Style=1** creat the ggplot with a vertical red line, and **Style=2** Creat the ggplot using collors to differing the significan and not significant elements.
+
+## Creating the plots
+
+```{r}
+GGTukey.3(TUKEY,Style=1)
+GGTukey.3(TUKEY,Style=2)
+```
+

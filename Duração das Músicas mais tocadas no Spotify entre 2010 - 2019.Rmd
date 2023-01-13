@@ -1,0 +1,115 @@
+---
+title: "Duração das Músicas mais tocadas no Spotify entre 2010 - 2019"
+author: "Edson Nilton de Moura SIlva Júnior"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::downcute:
+    self_contained: true
+    thumbnails: FALSE
+    lightbox: true
+    gallery: true
+    highlight: tango
+---
+
+```{r setup, include=FALSE, message = FALSE, warning = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Pacotes
+
+```{r}
+library(tidyverse)
+
+library(lubridate)
+
+library(readxl)
+```
+
+# Dados
+
+## Carregando os dados
+
+```{r, message = FALSE, warning = FALSE}
+musicas <- read_xlsx("músicas.xlsx")
+
+musicas
+```
+
+# Análise
+
+## Teste de correlação das médias de duração em relação aos anos
+
+```{r, message = FALSE, warning = FALSE}
+músicas_valores_medios <- musicas %>%
+  group_by(year) %>% 
+  summarise(Média = mean(`Length - The duration of the song`))
+
+cor.test(músicas_valores_medios$year,
+         músicas_valores_medios$Média,
+         method = "pearson") 
+```
+## Plotando a duração média ao longo dos anos
+
+```{r, message = FALSE, warning = FALSE}
+musicas %>% 
+  group_by(year) %>% 
+  summarise(Média = mean(`Length - The duration of the song`)) %>%
+  ggplot(aes(year, Média))+
+  geom_smooth(method = "gam",
+              color = "#1ed760",
+              fill = "#1db954",
+              size = 0.75)+
+  geom_line(color = "#ffffff",
+            size = 0.75)+
+  geom_point(shape = 21,
+             color = "#ffffff",
+             fill = "#1db954",
+             size = 4)+
+  labs(x = "Anos",
+       y = "Duração média (s)",
+       title = "Média de Duração das Principais Músicas do Spotify (2010 - 2019)",
+       caption = "Fonte: https://github.com/rfordatascience/tidytuesday/blob/master/data/2021/2021-09-14/readme.md#audio_featurescsv")+
+  scale_x_continuous(breaks = seq(2010, 2019, 1))+
+  theme(title = element_text(color = "#1ed760", size = 12),
+        plot.caption = element_text(color = "#1ed760", hjust = 0.5),
+        axis.text = element_text(color = "#ffffff", size = 10),
+        axis.title = element_text(color = "#1ed760", size = 12),
+        panel.grid = element_line(color = "#ffffff", linetype = "dashed", size = 0.5),
+        panel.grid.minor = element_line(color = "#ffffff", linetype = "dashed", size = 0.5),
+        axis.line = element_blank(),
+        plot.background = element_rect(fill = "#191414", color = "#191414"),
+        panel.background = element_rect(fill ="#191414"),
+        panel.border = element_rect(colour = "#ffffff", fill = NA, size = 0.5),
+        legend.key = element_rect(color = "#191414", fill = "#191414"))
+
+ggsave(filename = "músicas - duração.png",
+       height = 8,
+       width = 11)
+```
+## Boxplot dos valores ao longo dos anos
+
+```{r, message = FALSE, warning = FALSE}
+musicas %>% 
+  ggplot(aes(factor(year), `Length - The duration of the song`))+
+  geom_boxplot(color = "#1ed760",
+               fill = "#1db954",
+               outlier.shape = 21,
+               outlier.fill = "#1ed760",
+               outlier.size = 4)+
+  labs(x = "Anos",
+       y = "Duração (s)",
+       title = "Duração das Principais Músicas do Spotify (2010 - 2019)",
+       caption = "Fonte: https://github.com/rfordatascience/tidytuesday/blob/master/data/2021/2021-09-14/readme.md#audio_featurescsv")+
+  theme(title = element_text(color = "#1ed760", size = 12),
+        plot.caption = element_text(color = "#1ed760", hjust = 0.5),
+        axis.text = element_text(color = "#ffffff", size = 10),
+        axis.title = element_text(color = "#1ed760", size = 12),
+        panel.grid = element_line(color = "#ffffff", linetype = "dashed", size = 0.5),
+        panel.grid.minor = element_line(color = "#ffffff", linetype = "dashed", size = 0.5),
+        axis.line = element_blank(),
+        plot.background = element_rect(fill = "#191414", color = "#191414"),
+        panel.background = element_rect(fill ="#191414"),
+        panel.border = element_rect(colour = "#ffffff", fill = NA, size = 0.5),
+        legend.key = element_rect(color = "#191414", fill = "#191414"))
+```
+
